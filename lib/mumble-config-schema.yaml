@@ -1,0 +1,11 @@
+type: object
+requires: ["mumble_grpc_endpoint", "domain", "homeserverURL", "matrixRoom"]
+properties:
+    mumble_grpc_endpoint:
+        type: string
+    domain:
+        type: string
+    homeserverURL:
+        type: string
+    matrixRoom:
+        type: string

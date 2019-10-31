@@ -1,0 +1,7 @@
+node_modules
+.vscode
+mumble-config.yaml
+mumble-registration.yaml
+room-store.db
+user-store.db
+build

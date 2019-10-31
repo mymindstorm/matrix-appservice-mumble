@@ -1,0 +1,8 @@
+# Address where Murmur is listening for gRPC. This will be in Murmur's logs.
+mumble_grpc_endpoint: '127.0.0.1:50051'
+# Homeserver domain
+domain: 'example.com'
+# Homeserver URL
+homeserverURL: 'https://matrix.example.com/'
+# Internal ID of the Matrix room to use for bridging. On Riot this is under 'Room Settings' => 'Advanced' => 'Room information'.
+matrixRoom: '!randomID:example.com'
