@@ -15,7 +15,7 @@ async function main() {
       callback(reg);
     },
     bridgeConfig: {
-      schema: 'mumble-config-schema.yaml',
+      schema: __dirname + '/../lib/mumble-config-schema.yaml',
     },
     async run(port: number, config: MurmurConfig) {
       console.log('Connecting to Murmur...');
@@ -31,7 +31,7 @@ async function main() {
       const bridge = new Bridge({
         homeserverUrl: config.homeserverURL,
         domain: config.domain,
-        registration: 'mumble-registration.yaml',
+        registration: __dirname + '/../mumble-registration.yaml',
         controller: {
           onEvent: function(request: any, context: any) {
             const event = request.getData();
