@@ -38,6 +38,8 @@ async function main() {
             if (event.type !== 'm.room.message' ||
                 !event.content || event.room_id !== config.matrixRoom) {
               return;
+            } else if (event.sender === `@mumblebot:${config.domain}`) {
+              return;
             }
 
             murmur.sendMessage(event, config);
