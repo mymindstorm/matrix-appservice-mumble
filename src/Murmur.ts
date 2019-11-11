@@ -87,14 +87,13 @@ export default class Murmur {
     stream.on('data', (chunk) => {
       switch (chunk.type) {
         case 'UserConnected':
-          const connIntent = bridge.getIntent();
-          connIntent.sendText(config.matrixRoom,
-              `${chunk.user.name} has connected to the server.`);
+          const connIntent = bridge.getIntent(`@mumble_${chunk.user.name}:${config.domain}`);
+          connIntent.setDisplayName(chunk.user.name);
+          connIntent.setPresence("online", "Connected to Mumble");
           break;
         case 'UserDisconnected':
-          const disconnIntent = bridge.getIntent();
-          disconnIntent.sendText(config.matrixRoom,
-              `${chunk.user.name} has disconnected from the server.`);
+          const disconnIntent = bridge.getIntent(`@mumble_${chunk.user.name}:${config.domain}`);
+          disconnIntent.setPresence("offline");
           break;
         case 'UserTextMessage':
           const textIntent = bridge
