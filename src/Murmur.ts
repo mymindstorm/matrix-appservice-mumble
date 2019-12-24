@@ -122,11 +122,10 @@ export default class Murmur {
     if (!this.client || !this.server) {
       return;
     }
-    console.log(this.matrixClient);
 
     let messageContent = event.content.body;
     if (event.content.msgtype === "m.image" || event.content.msgtype === "m.file") {
-      const url = this.matrixClient.mxcUrlToHttp(event.content.url, 800, 600, "scale", true);
+      const url = this.matrixClient.mxcUrlToHttp(event.content.url, null, null, null, true);
       if (url) {
         messageContent = `<a href="${url}">${event.content.body}</a>`;
       }
