@@ -122,6 +122,7 @@ export default class Murmur {
     if (!this.client || !this.server) {
       return;
     }
+    console.log(this.matrixClient);
 
     let messageContent = event.content.body;
     if (event.content.msgtype === "m.image" || event.content.msgtype === "m.file") {
@@ -133,7 +134,7 @@ export default class Murmur {
 
     this.client.textMessageSend({
       server: this.server,
-      text: `${event.sender}: ${event.content.body}`,
+      text: `${event.sender}: ${messageContent}`,
     }, () => {});
 
     return;
