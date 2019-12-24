@@ -8,9 +8,8 @@ export default class Murmur {
   private matrixClient: any;
   client: MurmurClient | undefined;
 
-  constructor(addr: string, matrixClient: any) {
+  constructor(addr: string) {
     this.addr = addr;
-    this.matrixClient = matrixClient;
     return;
   }
 
@@ -111,6 +110,11 @@ export default class Murmur {
     });
 
     // stream.on error
+    return;
+  }
+
+  setMatrixClient(client: any) {
+    this.matrixClient = client;
     return;
   }
 

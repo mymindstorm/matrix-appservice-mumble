@@ -18,6 +18,16 @@ async function main() {
       schema: __dirname + '/../lib/mumble-config-schema.yaml',
     },
     async run(port: number, config: MurmurConfig) {
+      console.log('Connecting to Murmur...');
+      const murmur = new Murmur(config.mumble_grpc_endpoint);
+      await murmur.connectClient();
+      if (!murmur.client) {
+        console.log('Connection error.');
+        process.exit(1);
+        return;
+      }
+      console.log('Connetion to Murmur established!');
+
       const bridge = new Bridge({
         homeserverUrl: config.homeserverURL,
         domain: config.domain,
@@ -38,18 +48,9 @@ async function main() {
         },
       });
       console.log('Matrix-side listening on port %s', port);
-
-      console.log('Connecting to Murmur...');
-      const murmur = new Murmur(config.mumble_grpc_endpoint, bridge.getClientFactory().getClientAs(null));
-      await murmur.connectClient();
-      if (!murmur.client) {
-        console.log('Connection error.');
-        process.exit(1);
-        return;
-      }
-      console.log('Connetion to Murmur established!');
       await murmur.setupCallbacks(bridge, config);
       bridge.run(port, config);
+      murmur.setMatrixClient(bridge.getClientFactory().getClientAs(null));
       return;
     },
   }).run();
