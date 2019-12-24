@@ -1,21 +1,18 @@
 import {loadPackageDefinition, credentials} from 'grpc';
 import { MurmurClient, MurmurServer, MurmurConfig, MessageEvent } from './types';
 import * as protoLoader from '@grpc/proto-loader';
-import showdown from 'showdown';
-import { JSDOM } from 'jsdom';
+import TurndownService from 'turndown';
 
 export default class Murmur {
   private addr: string;
   private server: MurmurServer | undefined;
   private matrixClient: any;
-  private converter: showdown.Converter;
-  private dom: JSDOM;
+  private turndownService: TurndownService;
   client: MurmurClient | undefined;
 
   constructor(addr: string) {
     this.addr = addr;
-    this.converter = new showdown.Converter();
-    this.dom = new JSDOM()
+    this.turndownService = new TurndownService();
     return;
   }
 
@@ -107,7 +104,7 @@ export default class Murmur {
         case 'UserTextMessage':
           const textIntent = bridge
               .getIntent(`@mumble_${chunk.user.name}:${config.domain}`);
-          textIntent.sendText(config.matrixRoom, this.converter.makeMarkdown(chunk.message.text, this.dom.window.document));
+          textIntent.sendText(config.matrixRoom, this.turndownService.turndown(chunk.message.text));
           break;
         default:
           break;
@@ -129,7 +126,7 @@ export default class Murmur {
       return;
     }
 
-    let messageContent = this.converter.makeHtml(event.content.body);
+    let messageContent = event.content.body;
     if (event.content.msgtype === "m.image" || event.content.msgtype === "m.file") {
       const url = this.matrixClient.mxcUrlToHttp(event.content.url, null, null, null, true);
       if (url) {
