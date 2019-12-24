@@ -1,6 +1,6 @@
 import {loadPackageDefinition, credentials} from 'grpc';
 import { MurmurClient, MurmurServer, MurmurConfig, MessageEvent } from './types';
-import protoLoader from '@grpc/proto-loader';
+import * as protoLoader from '@grpc/proto-loader';
 import showdown from 'showdown';
 
 export default class Murmur {
