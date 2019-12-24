@@ -1,18 +1,15 @@
 import {loadPackageDefinition, credentials} from 'grpc';
 import { MurmurClient, MurmurServer, MurmurConfig, MessageEvent } from './types';
 import * as protoLoader from '@grpc/proto-loader';
-import TurndownService from 'turndown';
 
 export default class Murmur {
   private addr: string;
   private server: MurmurServer | undefined;
   private matrixClient: any;
-  private turndownService: TurndownService;
   client: MurmurClient | undefined;
 
   constructor(addr: string) {
     this.addr = addr;
-    this.turndownService = new TurndownService();
     return;
   }
 
