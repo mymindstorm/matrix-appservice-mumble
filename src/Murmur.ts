@@ -104,7 +104,12 @@ export default class Murmur {
         case 'UserTextMessage':
           const textIntent = bridge
               .getIntent(`@mumble_${chunk.user.name}:${config.domain}`);
-          textIntent.sendText(config.matrixRoom, this.turndownService.turndown(chunk.message.text));
+          textIntent.sendMessage(config.matrixRoom, {
+            body: chunk.message.text,
+            format: "org.matrix.custom.html",
+            formatted_body: chunk.message.text,
+            msgtype: "m.text"
+          });
           break;
         default:
           break;
