@@ -1,14 +1,16 @@
 import {loadPackageDefinition, credentials} from 'grpc';
 import * as protoLoader from '@grpc/proto-loader';
-import { MurmurClient, MurmurServer, MurmurConfig } from './types';
+import { MurmurClient, MurmurServer, MurmurConfig, MessageEvent } from './types';
 
 export default class Murmur {
   private addr: string;
   private server: MurmurServer | undefined;
+  private matrixClient: any;
   client: MurmurClient | undefined;
 
-  constructor(addr: string) {
+  constructor(addr: string, matrixClient: any) {
     this.addr = addr;
+    this.matrixClient = matrixClient;
     return;
   }
 
@@ -88,6 +90,7 @@ export default class Murmur {
       switch (chunk.type) {
         case 'UserConnected':
           const connIntent = bridge.getIntent();
+          connIntent.setDisplayName(chunk.user.name);
           connIntent.sendText(config.matrixRoom,
               `${chunk.user.name} has connected to the server.`);
           break;
@@ -111,9 +114,17 @@ export default class Murmur {
     return;
   }
 
-  async sendMessage(event: { sender: string, content: { body: string }}, config: MurmurConfig) {
+  async sendMessage(event: MessageEvent, config: MurmurConfig) {
     if (!this.client || !this.server) {
       return;
+    }
+
+    let messageContent = event.content.body;
+    if (event.content.msgtype === "m.image" || event.content.msgtype === "m.file") {
+      const url = this.matrixClient.mxcUrlToHttp(event.content.url, 800, 600, "scale", true);
+      if (url) {
+        messageContent = `<a href="${url}">${event.content.body}</a>`;
+      }
     }
 
     this.client.textMessageSend({
