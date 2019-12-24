@@ -2,17 +2,20 @@ import {loadPackageDefinition, credentials} from 'grpc';
 import { MurmurClient, MurmurServer, MurmurConfig, MessageEvent } from './types';
 import * as protoLoader from '@grpc/proto-loader';
 import showdown from 'showdown';
+import { JSDOM } from 'jsdom';
 
 export default class Murmur {
   private addr: string;
   private server: MurmurServer | undefined;
   private matrixClient: any;
   private converter: showdown.Converter;
+  private dom: JSDOM;
   client: MurmurClient | undefined;
 
   constructor(addr: string) {
     this.addr = addr;
     this.converter = new showdown.Converter();
+    this.dom = new JSDOM()
     return;
   }
 
@@ -104,7 +107,7 @@ export default class Murmur {
         case 'UserTextMessage':
           const textIntent = bridge
               .getIntent(`@mumble_${chunk.user.name}:${config.domain}`);
-          textIntent.sendText(config.matrixRoom, this.converter.makeMarkdown(chunk.message.text));
+          textIntent.sendText(config.matrixRoom, this.converter.makeMarkdown(chunk.message.text, this.dom.window.document));
           break;
         default:
           break;
