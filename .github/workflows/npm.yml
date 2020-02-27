@@ -1,16 +1,11 @@
 name: Publish
 
 on:
-  push:
-    branches: 
-      - release
-
-env:
-  NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+  release:
+    types: [published]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -28,3 +23,5 @@ jobs:
         path: build
     - name: Publish
       run: npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
