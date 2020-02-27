@@ -1,4 +1,4 @@
-import {loadPackageDefinition, credentials} from 'grpc';
+import { loadPackageDefinition, credentials } from 'grpc';
 import { MurmurClient, MurmurServer, MurmurConfig, MessageEvent } from './types';
 import * as protoLoader from '@grpc/proto-loader';
 
@@ -17,19 +17,19 @@ export default class Murmur {
   connectClient() {
     return new Promise((resolve) => {
       const pkgDef = protoLoader.loadSync(
-          __dirname + '/MurmurRPC.proto',
-          {
-            keepCase: true,
-            longs: String,
-            enums: String,
-            defaults: true,
-            oneofs: true,
-          });
+        __dirname + '/MurmurRPC.proto',
+        {
+          keepCase: true,
+          longs: String,
+          enums: String,
+          defaults: true,
+          oneofs: true,
+        });
       const MurmurRPC = loadPackageDefinition(pkgDef).MurmurRPC;
       // @ts-ignore
       const client = new MurmurRPC.V1(
-          this.addr,
-          credentials.createInsecure()) as MurmurClient;
+        this.addr,
+        credentials.createInsecure()) as MurmurClient;
       client.waitForReady(Infinity, (err) => {
         if (err) {
           console.log(err);
@@ -69,13 +69,13 @@ export default class Murmur {
               break;
             }
           }
-  
+
           if (!server) {
             console.log('No servers running!');
             process.exit(1);
             return;
           }
-  
+
           this.server = server;
           resolve(this.client.serverEvents(this.server));
         }
@@ -91,16 +91,16 @@ export default class Murmur {
           const connIntent = bridge.getIntent();
           connIntent.setDisplayName(chunk.user.name);
           connIntent.sendText(config.matrixRoom,
-              `${chunk.user.name} has connected to the server.`);
+            `${chunk.user.name} has connected to the server.`);
           break;
         case 'UserDisconnected':
           const disconnIntent = bridge.getIntent();
           disconnIntent.sendText(config.matrixRoom,
-              `${chunk.user.name} has disconnected from the server.`);
+            `${chunk.user.name} has disconnected from the server.`);
           break;
         case 'UserTextMessage':
           const textIntent = bridge
-              .getIntent(`@mumble_${chunk.user.name}:${config.domain}`);
+            .getIntent(`@mumble_${chunk.user.name}:${config.domain}`);
           textIntent.sendMessage(config.matrixRoom, {
             body: chunk.message.text,
             format: "org.matrix.custom.html",
@@ -136,10 +136,16 @@ export default class Murmur {
       }
     }
 
+    if (event.content.msgtype === "m.text"
+      && event.content.format === "org.matrix.custom.html"
+      && event.content.formatted_body) {
+      messageContent = event.content.formatted_body;
+    }
+
     this.client.textMessageSend({
       server: this.server,
       text: `${event.sender}: ${messageContent}`,
-    }, () => {});
+    }, () => { });
 
     return;
   }

@@ -53,6 +53,8 @@ interface MessageImageContent {
 interface MessageTextContent {
     body: string;
     msgtype: "m.text";
+    format?: string;
+    formatted_body?: string;
 }
 
 interface MessageFileContent {
