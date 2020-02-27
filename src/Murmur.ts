@@ -105,7 +105,7 @@ export default class Murmur {
             body: chunk.message.text,
             format: "org.matrix.custom.html",
             formatted_body: chunk.message.text,
-            msgtype: "m.text"
+            msgtype: "m.notice"
           });
           break;
         default:
