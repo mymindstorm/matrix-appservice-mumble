@@ -21,8 +21,10 @@
   },
   "devDependencies": {
     "@types/node": "^12.12.5",
-    "typescript": "^3.6.4"
+    "typescript": "^3.8.2"
   },
   "bin": "bin/matrix-appservice-mumble",
-  "files": ["build"]
+  "files": [
+    "build"
+  ]
 }
