@@ -44,5 +44,7 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). I have some b
 
 #### Matrix -> Murmr not working
 
-- Can you curl?
-- Files in working directory?
+- Can you curl `url` in `mumble-config.yaml` from the homeserver?
+    - Check firewall configuration
+    - Check if matrix-appservice-mumble is running
+    - Check logs
