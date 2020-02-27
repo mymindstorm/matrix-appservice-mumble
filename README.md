@@ -11,7 +11,17 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). I have some b
 
 ### Setup bridge
 
-1. [Download a release](https://github.com/mymindstorm/matrix-appservice-mumble/releases) and build
+1. Install
+
+    Using npm:
+    ```bash
+    npm install --global matrix-appservice-mumble
+    ```
+
+    Manually:
+
+    [Download a release](https://github.com/mymindstorm/matrix-appservice-mumble/releases) and build
+
     ```bash
     npm i
     ./build.sh
@@ -22,7 +32,7 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). I have some b
     ```bash
     # Replace "https://localhost:port" with the address your homeserver will use to talk
     # with matrix-appservice-mumble. The port matrix-appservice-mumble uses can be set with -p.
-    ./bin/matrix-appservice-mumble -r -u "https://localhost:port"
+    matrix-appservice-mumble -r -u "https://localhost:port"
     ```
 
     2. Copy `mumble-registration.yaml` to homeserver
@@ -38,7 +48,7 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). I have some b
 
 4. Fill out `mumble-config.yaml`. Look at the `mumble-config.yaml.example` file for an example.
 
-5. `./bin/matrix-appservice-mumble -c ./mumble-config.yaml`
+5. `matrix-appservice-mumble -c ./mumble-config.yaml`
 
 ### Troubleshooting
 
