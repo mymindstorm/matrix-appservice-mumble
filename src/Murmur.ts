@@ -87,13 +87,17 @@ export default class Murmur {
         case 'UserConnected':
           const connIntent = bridge.getIntent();
           connIntent.setDisplayName(chunk.user.name);
-          connIntent.sendText(config.matrixRoom,
-            `${chunk.user.name} has connected to the server.`);
+          connIntent.sendMessage(config.matrixRoom, {
+            body: `${chunk.user.name} has connected to the server.`,
+            msgtype: "m.notice"
+          });
           break;
         case 'UserDisconnected':
           const disconnIntent = bridge.getIntent();
-          disconnIntent.sendText(config.matrixRoom,
-            `${chunk.user.name} has disconnected from the server.`);
+          connIntent.sendMessage(config.matrixRoom, {
+            body: `${chunk.user.name} has disconnected to the server.`,
+            msgtype: "m.notice"
+          });
           break;
         case 'UserTextMessage':
           // is this a message we should bridge?
@@ -118,7 +122,7 @@ export default class Murmur {
             body: chunk.message.text,
             format: "org.matrix.custom.html",
             formatted_body: chunk.message.text,
-            msgtype: "m.notice"
+            msgtype: "m.text"
           });
           break;
         default:
