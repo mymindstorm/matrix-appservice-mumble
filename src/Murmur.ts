@@ -86,7 +86,6 @@ export default class Murmur {
       switch (chunk.type) {
         case 'UserConnected':
           const connIntent = bridge.getIntent();
-          connIntent.setDisplayName(chunk.user.name);
           connIntent.sendMessage(config.matrixRoom, {
             body: `${chunk.user.name} has connected to the server.`,
             msgtype: "m.notice"
@@ -94,7 +93,7 @@ export default class Murmur {
           break;
         case 'UserDisconnected':
           const disconnIntent = bridge.getIntent();
-          connIntent.sendMessage(config.matrixRoom, {
+          disconnIntent.sendMessage(config.matrixRoom, {
             body: `${chunk.user.name} has disconnected to the server.`,
             msgtype: "m.notice"
           });
