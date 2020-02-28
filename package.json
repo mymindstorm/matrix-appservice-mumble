@@ -1,6 +1,6 @@
 {
   "name": "matrix-appservice-mumble",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Matrix to Mumble bridge",
   "scripts": {
     "build": "./build.sh"
