@@ -31,7 +31,7 @@ async function main() {
       const bridge = new Bridge({
         homeserverUrl: config.homeserverURL,
         domain: config.domain,
-        registration: __dirname + '/../mumble-registration.yaml',
+        registration: 'mumble-registration.yaml',
         controller: {
           onEvent: function(request: any, context: any) {
             const event = request.getData();
