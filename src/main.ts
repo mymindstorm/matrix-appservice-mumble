@@ -15,7 +15,7 @@ async function main() {
       callback(reg);
     },
     bridgeConfig: {
-      schema: __dirname + '/../lib/mumble-config-schema.yaml',
+      schema: __dirname + '/mumble-config-schema.yaml',
     },
     async run(port: number, config: MurmurConfig) {
       console.log('Connecting to Murmur...');
