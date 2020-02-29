@@ -1,13 +1,16 @@
 {
   "name": "matrix-appservice-mumble",
-  "version": "1.0.0",
-  "description": "Matrix Mumble bridge",
+  "version": "0.1.0",
+  "description": "Matrix to Mumble bridge",
   "scripts": {
     "build": "./build.sh"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/mymindstorm/matrix-appservice-mumble.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mymindstorm/matrix-appservice-mumble/issues/new"
   },
   "author": "Brendan Early <mymindstorm@evermiss.net>",
   "license": "MIT",
@@ -18,6 +21,10 @@
   },
   "devDependencies": {
     "@types/node": "^12.12.5",
-    "typescript": "^3.6.4"
-  }
+    "typescript": "^3.8.2"
+  },
+  "bin": "bin/matrix-appservice-mumble",
+  "files": [
+    "build"
+  ]
 }

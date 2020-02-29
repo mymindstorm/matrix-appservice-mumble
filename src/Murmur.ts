@@ -1,4 +1,4 @@
-import {loadPackageDefinition, credentials} from 'grpc';
+import { loadPackageDefinition, credentials } from 'grpc';
 import { MurmurClient, MurmurServer, MurmurConfig, MessageEvent } from './types';
 import * as protoLoader from '@grpc/proto-loader';
 
@@ -17,19 +17,19 @@ export default class Murmur {
   connectClient() {
     return new Promise((resolve) => {
       const pkgDef = protoLoader.loadSync(
-          __dirname + '/MurmurRPC.proto',
-          {
-            keepCase: true,
-            longs: String,
-            enums: String,
-            defaults: true,
-            oneofs: true,
-          });
+        __dirname + '/MurmurRPC.proto',
+        {
+          keepCase: true,
+          longs: String,
+          enums: String,
+          defaults: true,
+          oneofs: true,
+        });
       const MurmurRPC = loadPackageDefinition(pkgDef).MurmurRPC;
       // @ts-ignore
       const client = new MurmurRPC.V1(
-          this.addr,
-          credentials.createInsecure()) as MurmurClient;
+        this.addr,
+        credentials.createInsecure()) as MurmurClient;
       client.waitForReady(Infinity, (err) => {
         if (err) {
           console.log(err);
@@ -41,26 +41,23 @@ export default class Murmur {
     });
   }
 
-  // Sets server and returns server stream
+  // Sets server to the first running one and returns server stream
   getServerStream() {
     return new Promise((resolve) => {
       if (!this.client) {
         console.log("Murmur client connection null!");
         process.exit(1);
-        return;
       }
 
       this.client.serverQuery({}, (e, r) => {
         if (!this.client) {
           console.log("Murmur client connection null!");
           process.exit(1);
-          return;
         }
 
         if (e) {
           console.log(e);
           process.exit(1);
-          return;
         } else if (r) {
           let server;
           for (const currentServer of r.servers) {
@@ -69,13 +66,13 @@ export default class Murmur {
               break;
             }
           }
-  
+
           if (!server) {
             console.log('No servers running!');
             process.exit(1);
             return;
           }
-  
+
           this.server = server;
           resolve(this.client.serverEvents(this.server));
         }
@@ -89,18 +86,37 @@ export default class Murmur {
       switch (chunk.type) {
         case 'UserConnected':
           const connIntent = bridge.getIntent();
-          connIntent.setDisplayName(chunk.user.name);
-          connIntent.sendText(config.matrixRoom,
-              `${chunk.user.name} has connected to the server.`);
+          connIntent.sendMessage(config.matrixRoom, {
+            body: `${chunk.user.name} has connected to the server.`,
+            msgtype: "m.notice"
+          });
           break;
         case 'UserDisconnected':
           const disconnIntent = bridge.getIntent();
-          disconnIntent.sendText(config.matrixRoom,
-              `${chunk.user.name} has disconnected from the server.`);
+          disconnIntent.sendMessage(config.matrixRoom, {
+            body: `${chunk.user.name} has disconnected to the server.`,
+            msgtype: "m.notice"
+          });
           break;
         case 'UserTextMessage':
+          // is this a message we should bridge?
+          if (!chunk.message.channels) {
+            return;
+          } else {
+            let shouldSend = false;
+            for (const channel of chunk.message.channels) {
+              if (config.channels && !config.channels.includes(channel.name)) {
+                  continue;
+              }
+              shouldSend = true;
+            }
+            if (!shouldSend) {
+              return;
+            }
+          }
+
           const textIntent = bridge
-              .getIntent(`@mumble_${chunk.user.name}:${config.domain}`);
+            .getIntent(`@mumble_${chunk.user.name}:${config.domain}`);
           textIntent.sendMessage(config.matrixRoom, {
             body: chunk.message.text,
             format: "org.matrix.custom.html",
@@ -136,10 +152,16 @@ export default class Murmur {
       }
     }
 
+    if (event.content.msgtype === "m.text"
+      && event.content.format === "org.matrix.custom.html"
+      && event.content.formatted_body) {
+      messageContent = event.content.formatted_body;
+    }
+
     this.client.textMessageSend({
       server: this.server,
       text: `${event.sender}: ${messageContent}`,
-    }, () => {});
+    }, () => { });
 
     return;
   }

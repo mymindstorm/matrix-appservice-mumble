@@ -1,6 +1,6 @@
 import Murmur from'./Murmur';
 // @ts-ignore
-import {Cli, Bridge, AppServiceRegistration, ClientFactory} from 'matrix-appservice-bridge';
+import {Cli, Bridge, AppServiceRegistration} from 'matrix-appservice-bridge';
 import { MurmurConfig } from './types';
 
 async function main() {
