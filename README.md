@@ -58,3 +58,4 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). I have some b
     - Check firewall configuration
     - Check if matrix-appservice-mumble is running
     - Check logs
+    - Check `mumble-registration.yaml` on both sides (should be in working directory of matrix-appservice-mumble and on homeserver)
