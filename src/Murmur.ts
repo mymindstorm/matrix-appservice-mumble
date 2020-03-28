@@ -94,7 +94,7 @@ export default class Murmur {
         case 'UserDisconnected':
           const disconnIntent = bridge.getIntent();
           disconnIntent.sendMessage(config.matrixRoom, {
-            body: `${chunk.user.name} has disconnected to the server.`,
+            body: `${chunk.user.name} has disconnected from the server.`,
             msgtype: "m.notice"
           });
           break;
