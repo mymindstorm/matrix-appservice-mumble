@@ -7,7 +7,7 @@ A simple Matrix to Mumble bridge. It sends messages between bridged rooms and te
 
 ### Compiling Murmur with gRPC support
 
-Murmur is not compiled with gRPC support by default (as of 1.3.0). I have some basic notes and directions on compiling Murmur [here](COMPILING_MURMUR.md).
+Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are using Fedora or CentOS, I have a [COPR](https://copr.fedorainfracloud.org/coprs/mymindstorm/mumble-grpc/) that you can use. Otherwise, you will need to compile Murmur yourself. I have some basic notes and directions on compiling Murmur [here](COMPILING_MURMUR.md).
 
 ### Setup bridge
 
