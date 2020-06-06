@@ -139,7 +139,7 @@ export default class Murmur {
     return;
   }
 
-  async sendMessage(event: MessageEvent, config: MurmurConfig) {
+  async sendMessage(event: MessageEvent, displayname : string, config: MurmurConfig) {
     if (!this.client || !this.server) {
       return;
     }
@@ -160,7 +160,7 @@ export default class Murmur {
 
     this.client.textMessageSend({
       server: this.server,
-      text: `${event.sender}: ${messageContent}`,
+      text: `${displayname}: ${messageContent}`,
     }, () => { });
 
     return;
