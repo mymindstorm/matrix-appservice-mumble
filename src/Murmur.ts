@@ -139,7 +139,7 @@ export default class Murmur {
     return;
   }
 
-  async sendMessage(event: MessageEvent, config: MurmurConfig) {
+  async sendMessage(event: MessageEvent, displayname?: string) {
     if (!this.client || !this.server) {
       return;
     }
@@ -158,9 +158,14 @@ export default class Murmur {
       messageContent = event.content.formatted_body;
     }
 
+    // If displayname was not provided, fall back to username
+    if (!displayname) {
+      displayname = event.sender;
+    }
+
     this.client.textMessageSend({
       server: this.server,
-      text: `${event.sender}: ${messageContent}`,
+      text: `${displayname}: ${messageContent}`,
     }, () => { });
 
     return;

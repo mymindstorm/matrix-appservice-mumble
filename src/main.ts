@@ -35,7 +35,7 @@ async function main() {
         // @ts-ignore
         registration: 'mumble-registration.yaml',
         controller: {
-          onEvent: function(request: any, _context: any) {
+          onEvent: async function (request: any, _context: any) {
             const event = request.getData();
             if (event.type !== 'm.room.message' ||
                 !event.content || event.room_id !== config.matrixRoom) {
@@ -44,7 +44,17 @@ async function main() {
               return;
             }
 
-            murmur.sendMessage(event, config);
+            let displayname;
+            try {
+              // Retrieve the display name
+              const profile = await bridge.getIntent().getProfileInfo(event.sender, 'displayname');
+              displayname = profile.displayname;
+            } catch (e) {
+              console.log('Exception fetching matrix profile of %s:', event.sender);
+              console.log(e);
+            }
+
+            murmur.sendMessage(event, displayname);
             return;
           },
         },
@@ -52,7 +62,7 @@ async function main() {
       console.log('Matrix-side listening on port %s', port);
       await murmur.setupCallbacks(bridge, config);
       bridge.run(port, config);
-      murmur.setMatrixClient(bridge.getClientFactory().getClientAs(null));
+      murmur.setMatrixClient(bridge.getClientFactory().getClientAs());
       return;
     },
   }).run();
