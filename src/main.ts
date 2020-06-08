@@ -1,12 +1,13 @@
 import Murmur from'./Murmur';
-// @ts-ignore
 import {Cli, Bridge, AppServiceRegistration} from 'matrix-appservice-bridge';
 import { MurmurConfig } from './types';
 
 async function main() {
+  // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/45345
+  // @ts-ignore
   new Cli({
     registrationPath: 'mumble-registration.yaml',
-    generateRegistration(reg: any, callback: (reg: any) => void) {
+    generateRegistration(reg, callback: (reg: any) => void) {
       reg.setId(AppServiceRegistration.generateToken());
       reg.setHomeserverToken(AppServiceRegistration.generateToken());
       reg.setAppServiceToken(AppServiceRegistration.generateToken());
@@ -24,16 +25,17 @@ async function main() {
       if (!murmur.client) {
         console.log('Connection error.');
         process.exit(1);
-        return;
       }
       console.log('Connetion to Murmur established!');
 
       const bridge = new Bridge({
         homeserverUrl: config.homeserverURL,
         domain: config.domain,
+        // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/45345
+        // @ts-ignore
         registration: 'mumble-registration.yaml',
         controller: {
-          onEvent: function(request: any, context: any) {
+          onEvent: function(request: any, _context: any) {
             const event = request.getData();
             if (event.type !== 'm.room.message' ||
                 !event.content || event.room_id !== config.matrixRoom) {

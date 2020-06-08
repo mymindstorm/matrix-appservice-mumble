@@ -20,6 +20,7 @@
     "matrix-appservice-bridge": "^1.11.1"
   },
   "devDependencies": {
+    "@types/matrix-appservice-bridge": "^1.11.2",
     "@types/node": "^12.12.5",
     "typescript": "^3.8.2"
   },
