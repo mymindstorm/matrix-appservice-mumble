@@ -1,11 +1,13 @@
 import { loadPackageDefinition, credentials } from 'grpc';
 import { MurmurClient, MurmurServer, MurmurConfig, MessageEvent } from './types';
 import * as protoLoader from '@grpc/proto-loader';
+import { Bridge } from 'matrix-appservice-bridge';
+import { MatrixClient } from 'matrix-js-sdk';
 
 export default class Murmur {
   private addr: string;
   private server: MurmurServer | undefined;
-  private matrixClient: any;
+  private matrixClient: MatrixClient | undefined;
   client: MurmurClient | undefined;
 
   constructor(addr: string) {
@@ -80,7 +82,7 @@ export default class Murmur {
     });
   }
 
-  async setupCallbacks(bridge: any, config: MurmurConfig) {
+  async setupCallbacks(bridge: Bridge, config: MurmurConfig) {
     const stream = await this.getServerStream() as NodeJS.ReadableStream;
     stream.on('data', (chunk) => {
       switch (chunk.type) {
@@ -134,18 +136,19 @@ export default class Murmur {
     return;
   }
 
-  setMatrixClient(client: any) {
+  setMatrixClient(client: MatrixClient) {
     this.matrixClient = client;
     return;
   }
 
   async sendMessage(event: MessageEvent, displayname?: string) {
-    if (!this.client || !this.server) {
+    if (!this.client || !this.server || !this.matrixClient) {
       return;
     }
 
     let messageContent = event.content.body;
     if (event.content.msgtype === "m.image" || event.content.msgtype === "m.file") {
+      // @ts-ignore - this is nullable
       const url = this.matrixClient.mxcUrlToHttp(event.content.url, null, null, null, true);
       if (url) {
         messageContent = `<a href="${url}">${event.content.body}</a>`;
