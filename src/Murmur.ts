@@ -135,11 +135,8 @@ export default class Murmur {
     }
 
     if (event.content.msgtype === "m.text"
-      // @ts-ignore - will be submitting fixes upstream
       && event.content.format === "org.matrix.custom.html"
-      // @ts-ignore - will be submitting fixes upstream
       && event.content.formatted_body) {
-      // @ts-ignore - will be submitting fixes upstream
       messageContent = event.content.formatted_body;
     }
 

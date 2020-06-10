@@ -2,8 +2,6 @@ import Murmur from'./Murmur';
 import {Cli, Bridge, AppServiceRegistration, Request, BridgeContext} from 'matrix-appservice-bridge';
 
 async function main() {
-  // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/45345
-  // @ts-ignore
   new Cli({
     registrationPath: 'mumble-registration.yaml',
     generateRegistration(reg, callback: (reg: any) => void) {
@@ -30,8 +28,6 @@ async function main() {
       const bridge = new Bridge({
         homeserverUrl: config.homeserverURL,
         domain: config.domain,
-        // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/45345
-        // @ts-ignore
         registration: 'mumble-registration.yaml',
         controller: {
           onEvent: async function (request: Request, _context: BridgeContext) {
