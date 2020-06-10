@@ -1,12 +1,12 @@
-import { loadPackageDefinition, credentials } from 'grpc';
-import { MurmurClient, MurmurServer, MurmurConfig, MessageEvent } from './types';
-import * as protoLoader from '@grpc/proto-loader';
+import { credentials } from "@grpc/grpc-js";
+import { V1Client as MurmurClient } from '../lib/MurmurRPC_grpc_pb';
+import { Server, TextMessage } from '../lib/MurmurRPC_pb';
 import { Bridge } from 'matrix-appservice-bridge';
 import { MatrixClient } from 'matrix-js-sdk';
 
 export default class Murmur {
   private addr: string;
-  private server: MurmurServer | undefined;
+  private server: Server | undefined;
   private matrixClient: MatrixClient | undefined;
   client: MurmurClient | undefined;
 
@@ -17,30 +17,9 @@ export default class Murmur {
 
   // Init connection
   connectClient() {
-    return new Promise((resolve) => {
-      const pkgDef = protoLoader.loadSync(
-        __dirname + '/MurmurRPC.proto',
-        {
-          keepCase: true,
-          longs: String,
-          enums: String,
-          defaults: true,
-          oneofs: true,
-        });
-      const MurmurRPC = loadPackageDefinition(pkgDef).MurmurRPC;
-      // @ts-ignore
-      const client = new MurmurRPC.V1(
+      return new MurmurClient(
         this.addr,
-        credentials.createInsecure()) as MurmurClient;
-      client.waitForReady(Infinity, (err) => {
-        if (err) {
-          console.log(err);
-          process.exit(1);
-        }
-        this.client = client;
-        resolve();
-      });
-    });
+        credentials.createInsecure());
   }
 
   // Sets server to the first running one and returns server stream
@@ -51,7 +30,7 @@ export default class Murmur {
         process.exit(1);
       }
 
-      this.client.serverQuery({}, (e, r) => {
+      this.client.serverQuery(new Server.Query(), (e, r) => {
         if (!this.client) {
           console.log("Murmur client connection null!");
           process.exit(1);
@@ -62,8 +41,8 @@ export default class Murmur {
           process.exit(1);
         } else if (r) {
           let server;
-          for (const currentServer of r.servers) {
-            if (currentServer.running) {
+          for (const currentServer of r.getServersList()) {
+            if (currentServer.getRunning()) {
               server = currentServer;
               break;
             }
@@ -166,10 +145,11 @@ export default class Murmur {
       displayname = event.sender;
     }
 
-    this.client.textMessageSend({
-      server: this.server,
-      text: `${displayname}: ${messageContent}`,
-    }, () => { });
+    const message = new TextMessage();
+    message.setServer(this.server);
+    message.setText(`${displayname}: ${messageContent}`);
+
+    this.client.textMessageSend(message, () => { });
 
     return;
   }

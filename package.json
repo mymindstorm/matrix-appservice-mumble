@@ -3,7 +3,8 @@
   "version": "0.2.0",
   "description": "Matrix to Mumble bridge",
   "scripts": {
-    "build": "./build.sh"
+    "build": "./build.sh",
+    "gen-bindings": "./gen-bindings.sh"
   },
   "repository": {
     "type": "git",
@@ -16,10 +17,11 @@
   "license": "MIT",
   "dependencies": {
     "@grpc/grpc-js": "^1.0.5",
-    "@grpc/proto-loader": "^0.5.4",
+    "google-protobuf": "^3.12.2",
     "matrix-appservice-bridge": "^1.12.2"
   },
   "devDependencies": {
+    "@types/google-protobuf": "^3.7.2",
     "@types/matrix-appservice-bridge": "^1.11.2",
     "@types/node": "^12.12.44",
     "grpc-tools": "^1.9.0",
