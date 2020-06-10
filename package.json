@@ -15,13 +15,15 @@
   "author": "Brendan Early <mymindstorm@evermiss.net>",
   "license": "MIT",
   "dependencies": {
+    "@grpc/grpc-js": "^1.0.5",
     "@grpc/proto-loader": "^0.5.4",
-    "grpc": "^1.24.3",
     "matrix-appservice-bridge": "^1.12.2"
   },
   "devDependencies": {
     "@types/matrix-appservice-bridge": "^1.11.2",
     "@types/node": "^12.12.44",
+    "grpc-tools": "^1.9.0",
+    "grpc_tools_node_protoc_ts": "^4.0.0",
     "typescript": "^3.9.5"
   },
   "bin": "bin/matrix-appservice-mumble",
