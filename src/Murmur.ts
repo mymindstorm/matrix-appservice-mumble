@@ -1,5 +1,5 @@
 import { credentials, ClientReadableStream, makeClientConstructor } from "@grpc/grpc-js";
-import * as murmurGrpcPb from '../lib/MurmurRPC_grpc_pb';
+import * as MurmurService from '../lib/MurmurRPC_grpc_pb';
 import { Server, TextMessage, Channel, User } from '../lib/MurmurRPC_pb';
 import { Bridge, RoomBridgeStore, Event, MatrixRoom } from 'matrix-appservice-bridge';
 import { MatrixClient } from 'matrix-js-sdk';
@@ -8,7 +8,7 @@ export default class Murmur {
   private addr: string;
   private server: Server | undefined;
   private matrixClient: MatrixClient | undefined;
-  client: murmurGrpcPb.IV1Client | undefined;
+  client: MurmurService.V1Client | undefined;
 
   constructor(addr: string) {
     this.addr = addr;
@@ -17,10 +17,13 @@ export default class Murmur {
 
   // Init connection
   connectClient() {
-    const MurmurClient = makeClientConstructor(murmurGrpcPb["V1Service"], "V1Service")
-    return new MurmurClient(
+    // @ts-ignore - bindings are wrong?
+    const MurmurClient = makeClientConstructor(MurmurService["MurmurRPC.V1"], "MurmurRPC.V1")
+    // @ts-ignore
+    this.client = new MurmurClient(
       this.addr,
       credentials.createInsecure());
+    return this.client;
   }
 
   // Sets server to the first running one and returns server stream
