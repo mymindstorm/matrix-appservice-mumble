@@ -70,7 +70,8 @@ async function main() {
                     break;
                   }
 
-                  const mtxRoom = await intent.roomState(mtxRoomId);
+                  // yet another bad type
+                  const mtxRoom = await intent.roomState(mtxRoomId, false);
                   console.log(mtxRoom);
                   if (!mtxRoom) {
                     intent.sendText(config.matrixRoom, "Could not find Matrix room.");
