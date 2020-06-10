@@ -1,5 +1,5 @@
 import Murmur from'./Murmur';
-import {Cli, Bridge, AppServiceRegistration} from 'matrix-appservice-bridge';
+import {Cli, Bridge, AppServiceRegistration, Request, BridgeContext} from 'matrix-appservice-bridge';
 
 async function main() {
   // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/45345
@@ -34,7 +34,7 @@ async function main() {
         // @ts-ignore
         registration: 'mumble-registration.yaml',
         controller: {
-          onEvent: async function (request: any, _context: any) {
+          onEvent: async function (request: Request, _context: BridgeContext) {
             const event = request.getData();
             if (event.type !== 'm.room.message' ||
                 !event.content || event.room_id !== config.matrixRoom) {

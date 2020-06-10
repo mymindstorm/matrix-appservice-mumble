@@ -1,7 +1,7 @@
 import { credentials } from "@grpc/grpc-js";
 import { V1Client as MurmurClient } from '../lib/MurmurRPC_grpc_pb';
 import { Server, TextMessage } from '../lib/MurmurRPC_pb';
-import { Bridge } from 'matrix-appservice-bridge';
+import { Bridge, Event } from 'matrix-appservice-bridge';
 import { MatrixClient } from 'matrix-js-sdk';
 
 export default class Murmur {
@@ -120,8 +120,8 @@ export default class Murmur {
     return;
   }
 
-  async sendMessage(event: MessageEvent, displayname?: string) {
-    if (!this.client || !this.server || !this.matrixClient) {
+  async sendMessage(event: Event, displayname?: string) {
+    if (!this.client || !this.server || !this.matrixClient || !event.content) {
       return;
     }
 
@@ -135,8 +135,11 @@ export default class Murmur {
     }
 
     if (event.content.msgtype === "m.text"
+      // @ts-ignore - will be submitting fixes upstream
       && event.content.format === "org.matrix.custom.html"
+      // @ts-ignore - will be submitting fixes upstream
       && event.content.formatted_body) {
+      // @ts-ignore - will be submitting fixes upstream
       messageContent = event.content.formatted_body;
     }
 
