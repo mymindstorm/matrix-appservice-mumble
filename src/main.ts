@@ -8,9 +8,6 @@ async function main() {
     filename: "./room-links.db"
    });
   const roomLinks = new RoomBridgeStore(roomLinkDb);
-  
-  // In memory DB with temporary auth codes
-  const linkAuthDb = new nedb();
 
   // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/45345
   // @ts-ignore
@@ -59,10 +56,31 @@ async function main() {
               const splitCommand = event.content.body?.split(' ') || ["invalid command"];
               switch (splitCommand[0]) {
                 case "link":
+                  const mtxRoomId = splitCommand[1];
+                  const mumbleChanName = splitCommand.slice(2).join(' ');
+
+                  if (!mtxRoomId && !mumbleChanName) {
+                    intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
+                    break;
+                  }
+
+                  const mumbleChanId = await murmur.getChannelId(mumbleChanName);
+                  if (!mumbleChanId) {
+                    intent.sendText(config.matrixRoom, "Could not find Mumble channel.");
+                    break;
+                  }
+
+                  const mtxRoom = await intent.roomState(mtxRoomId);
+                  console.log(mtxRoom);
+                  if (!mtxRoom) {
+                    intent.sendText(config.matrixRoom, "Could not find Matrix room.");
+                    break;
+                  }
                   break;
                 case "unlink":
                   break;
                 case "help":
+                  intent.sendText(config.matrixRoom, "TODO");
                   break;
                 default:
                   intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");

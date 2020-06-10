@@ -1,6 +1,6 @@
 import { credentials, ClientReadableStream } from "@grpc/grpc-js";
 import { V1Client as MurmurClient } from '../lib/MurmurRPC_grpc_pb';
-import { Server, TextMessage, Channel } from '../lib/MurmurRPC_pb';
+import { Server, TextMessage, Channel, User } from '../lib/MurmurRPC_pb';
 import { Bridge, RoomBridgeStore, Event, MatrixRoom } from 'matrix-appservice-bridge';
 import { MatrixClient } from 'matrix-js-sdk';
 
@@ -172,7 +172,27 @@ export default class Murmur {
     return;
   }
 
-  getChannelId(channelName: string) {
-    
+  // Get Mumble channel id from channel name
+  getChannelId(channelName: string): Promise<number | undefined> {
+    const query = new Channel.Query();
+    query.setServer(this.server);
+    return new Promise((resolve) => {
+      this.client?.channelQuery(query, (err, res) => {
+        if (err) {
+          console.error("Murmur channel lookup error:", err);
+          resolve();
+          return;
+        }
+
+        for (const channel of res.getChannelsList()) {
+          if (channelName.trim() === channel.getName()?.trim()) {
+            resolve(channel.getId());
+            return;
+          }
+        }
+
+        resolve();
+      });
+    });
   }
 };
