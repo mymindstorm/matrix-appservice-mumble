@@ -100,7 +100,7 @@ async function main() {
         },
       });
       console.log('Matrix-side listening on port %s', port);
-      await murmur.setupCallbacks(bridge, config);
+      await murmur.setupCallbacks(bridge, roomLinks, config);
       bridge.run(port, config);
       murmur.setMatrixClient(bridge.getClientFactory().getClientAs());
       return;

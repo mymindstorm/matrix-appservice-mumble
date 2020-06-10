@@ -1,7 +1,7 @@
-import { credentials } from "@grpc/grpc-js";
+import { credentials, ClientReadableStream } from "@grpc/grpc-js";
 import { V1Client as MurmurClient } from '../lib/MurmurRPC_grpc_pb';
 import { Server, TextMessage, Channel } from '../lib/MurmurRPC_pb';
-import { Bridge, Event, RemoteRoom } from 'matrix-appservice-bridge';
+import { Bridge, RoomBridgeStore, Event, MatrixRoom } from 'matrix-appservice-bridge';
 import { MatrixClient } from 'matrix-js-sdk';
 
 export default class Murmur {
@@ -23,7 +23,7 @@ export default class Murmur {
   }
 
   // Sets server to the first running one and returns server stream
-  getServerStream() {
+  getServerStream(): Promise<ClientReadableStream<Server.Event>> {
     return new Promise((resolve) => {
       if (!this.client) {
         console.log("Murmur client connection null!");
@@ -61,49 +61,60 @@ export default class Murmur {
     });
   }
 
-  async setupCallbacks(bridge: Bridge, config: MurmurConfig) {
-    const stream = await this.getServerStream() as NodeJS.ReadableStream;
-    stream.on('data', (chunk) => {
-      switch (chunk.type) {
-        case 'UserConnected':
-          const connIntent = bridge.getIntent();
-          connIntent.sendMessage(config.matrixRoom, {
-            body: `${chunk.user.name} has connected to the server.`,
-            msgtype: "m.notice"
-          });
-          break;
-        case 'UserDisconnected':
-          const disconnIntent = bridge.getIntent();
-          disconnIntent.sendMessage(config.matrixRoom, {
-            body: `${chunk.user.name} has disconnected from the server.`,
-            msgtype: "m.notice"
-          });
-          break;
-        case 'UserTextMessage':
-          // is this a message we should bridge?
-          if (!chunk.message.channels) {
-            return;
-          } else {
-            let shouldSend = false;
-            for (const channel of chunk.message.channels) {
-              if (config.channels && !config.channels.includes(channel.name)) {
-                  continue;
-              }
-              shouldSend = true;
-            }
-            if (!shouldSend) {
-              return;
-            }
+  async setupCallbacks(bridge: Bridge, roomLinks: RoomBridgeStore, config: MurmurConfig) {
+    const stream = await this.getServerStream();
+    const getMatrixRooms = async (channelId?: number): Promise<MatrixRoom[]> => {
+      if (!channelId) {
+        return [];
+      }
+      return await roomLinks.getLinkedMatrixRooms(String(channelId));
+    }
+    stream.on('data', async (event: Server.Event) => {
+      let matrixRooms: MatrixRoom[] = [];
+      switch (event.getType()) {
+        case Server.Event.Type.USERCONNECTED:
+          matrixRooms = await getMatrixRooms(event.getChannel()?.getId());
+          if (!matrixRooms.length) {
+            break;
           }
 
-          const textIntent = bridge
-            .getIntent(`@mumble_${chunk.user.name}:${config.domain}`);
-          textIntent.sendMessage(config.matrixRoom, {
-            body: chunk.message.text,
-            format: "org.matrix.custom.html",
-            formatted_body: chunk.message.text,
-            msgtype: "m.text"
-          });
+          const connIntent = bridge.getIntent();
+          for (const room of matrixRooms) {
+            connIntent.sendMessage(room.getId(), {
+              body: `${event.getUser()?.getName()} has connected to the server.`,
+              msgtype: "m.notice"
+            });
+          }
+          break;
+        case Server.Event.Type.USERDISCONNECTED:
+          matrixRooms = await getMatrixRooms(event.getChannel()?.getId());
+          if (!matrixRooms.length) {
+            break;
+          }
+
+          const disconnIntent = bridge.getIntent();
+          for (const room of matrixRooms) {
+            disconnIntent.sendMessage(room.getId(), {
+              body: `${event.getUser()?.getName()} has disconnected from the server.`,
+              msgtype: "m.notice"
+            });
+          }
+          break;
+        case Server.Event.Type.USERTEXTMESSAGE:
+          matrixRooms = await getMatrixRooms(event.getChannel()?.getId());
+          if (!matrixRooms.length) {
+            break;
+          }
+
+          const textIntent = bridge.getIntent(`@mumble_${event.getUser()?.getName()}:${config.domain}`);
+          for (const room of matrixRooms) {
+            textIntent.sendMessage(room.getId(), {
+              body: event.getMessage()?.getText,
+              format: "org.matrix.custom.html",
+              formatted_body: event.getMessage()?.getText(),
+              msgtype: "m.text"
+            });
+          }
           break;
         default:
           break;
@@ -120,6 +131,7 @@ export default class Murmur {
     return;
   }
 
+  // Matrix message -> Mumble
   sendMessage(event: Event, linkedRooms: number[], displayname?: string) {
     if (!this.client || !this.server || !this.matrixClient || !event.content) {
       return;
