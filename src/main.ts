@@ -1,6 +1,5 @@
 import Murmur from'./Murmur';
 import {Cli, Bridge, AppServiceRegistration} from 'matrix-appservice-bridge';
-import { MurmurConfig } from './types';
 
 async function main() {
   // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/45345

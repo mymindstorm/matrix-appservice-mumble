@@ -1,21 +1,9 @@
-import { Client, ClientDuplexStream } from "grpc";
-
-interface MurmurServer {
-    running: boolean;
-}
-
 interface MurmurConfig {
     domain: string;
     matrixRoom: string;
     mumble_grpc_endpoint: string;
     homeserverURL: string;
     channels?: string[];
-}
-
-interface MurmurClient extends Client {
-    serverQuery({ }, callback: (err: Error | undefined, res: { servers: MurmurServer[] } | undefined) => void): void;
-    textMessageSend(args: { server: MurmurServer, text: string }, callback: () => void): void;
-    serverEvents(server: MurmurServer): NodeJS.ReadableStream;
 }
 
 interface MessageEvent {
