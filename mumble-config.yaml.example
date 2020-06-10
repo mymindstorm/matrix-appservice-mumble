@@ -4,7 +4,7 @@ mumble_grpc_endpoint: '127.0.0.1:50051'
 domain: 'example.com'
 # Homeserver URL
 homeserverURL: 'https://matrix.example.com/'
-# Internal ID of the Matrix room to use for bridging. On Riot this is under 'Room Settings' => 'Advanced' => 'Room information'.
+# Internal ID of the Matrix room to use for bridge admin commands.
+# Anyone in this room will be able to link Mumble rooms to Matrix.
+# On Riot this is under 'Room Settings' => 'Advanced' => 'Room information'.
 matrixRoom: '!randomID:example.com'
-# List of Murmur channel names to bridge to Matrix. If not defined will send messages sent to any channels to Matrix.
-channels: ["Channel Name"]

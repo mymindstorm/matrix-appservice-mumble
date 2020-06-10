@@ -1,7 +1,7 @@
 import { credentials } from "@grpc/grpc-js";
 import { V1Client as MurmurClient } from '../lib/MurmurRPC_grpc_pb';
-import { Server, TextMessage } from '../lib/MurmurRPC_pb';
-import { Bridge, Event } from 'matrix-appservice-bridge';
+import { Server, TextMessage, Channel } from '../lib/MurmurRPC_pb';
+import { Bridge, Event, RemoteRoom } from 'matrix-appservice-bridge';
 import { MatrixClient } from 'matrix-js-sdk';
 
 export default class Murmur {
@@ -120,7 +120,7 @@ export default class Murmur {
     return;
   }
 
-  async sendMessage(event: Event, displayname?: string) {
+  sendMessage(event: Event, linkedRooms: number[], displayname?: string) {
     if (!this.client || !this.server || !this.matrixClient || !event.content) {
       return;
     }
@@ -135,11 +135,11 @@ export default class Murmur {
     }
 
     if (event.content.msgtype === "m.text"
-      // @ts-ignore - will be submitting fixes upstream
+      // @ts-ignore
       && event.content.format === "org.matrix.custom.html"
-      // @ts-ignore - will be submitting fixes upstream
+      // @ts-ignore
       && event.content.formatted_body) {
-      // @ts-ignore - will be submitting fixes upstream
+      // @ts-ignore
       messageContent = event.content.formatted_body;
     }
 
@@ -150,10 +150,17 @@ export default class Murmur {
 
     const message = new TextMessage();
     message.setServer(this.server);
+    for (const roomId of linkedRooms) {
+      message.addChannels(new Channel().setId(roomId));
+    }
     message.setText(`${displayname}: ${messageContent}`);
 
     this.client.textMessageSend(message, () => { });
 
     return;
+  }
+
+  getChannelId(channelName: string) {
+    
   }
 };

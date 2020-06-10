@@ -9,7 +9,3 @@ properties:
         type: string
     matrixRoom:
         type: string
-    channels:
-        type: array
-        items:
-            type: string

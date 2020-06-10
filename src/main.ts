@@ -1,7 +1,17 @@
 import Murmur from'./Murmur';
-import {Cli, Bridge, AppServiceRegistration, Request, BridgeContext} from 'matrix-appservice-bridge';
+import {Cli, Bridge, AppServiceRegistration, Request, BridgeContext, RoomBridgeStore} from 'matrix-appservice-bridge';
+import nedb from 'nedb';
 
 async function main() {
+  // Persistent DB with Matrix room <-> Mumble channel links
+  const roomLinkDb = new nedb({
+    filename: "./room-links.db"
+   });
+  const roomLinks = new RoomBridgeStore(roomLinkDb);
+  
+  // In memory DB with temporary auth codes
+  const linkAuthDb = new nedb();
+
   // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/45345
   // @ts-ignore
   new Cli({
@@ -37,23 +47,54 @@ async function main() {
           onEvent: async function (request: Request, _context: BridgeContext) {
             const event = request.getData();
             if (event.type !== 'm.room.message' ||
-                !event.content || event.room_id !== config.matrixRoom) {
+                !event.content) {
               return;
             } else if (event.sender === `@mumblebot:${config.domain}`) {
               return;
             }
 
-            let displayname;
-            try {
-              // Retrieve the display name
-              const profile = await bridge.getIntent().getProfileInfo(event.sender, 'displayname');
-              displayname = profile.displayname;
-            } catch (e) {
-              console.log('Exception fetching matrix profile of %s:', event.sender);
-              console.log(e);
+            const intent = bridge.getIntent();
+            if (event.room_id === config.matrixRoom && event.content.msgtype === "m.text") {
+              // Process admin room command
+              const splitCommand = event.content.body?.split(' ') || ["invalid command"];
+              switch (splitCommand[0]) {
+                case "link":
+                  break;
+                case "unlink":
+                  break;
+                case "help":
+                  break;
+                default:
+                  intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
+                  break;
+              }
+            } else {
+              const linkedRooms = await roomLinks.getLinkedRemoteRooms(event.room_id);
+
+              if (!linkedRooms.length) {
+                // If no linked rooms do not bridge message
+                return;
+              }
+
+              // Send message to linked rooms
+              // Get user display name
+              let displayname;
+              try {
+                // Retrieve the display name
+                const profile = await intent.getProfileInfo(event.sender, 'displayname');
+                displayname = profile.displayname;
+              } catch (e) {
+                console.log('Exception fetching matrix profile of %s:', event.sender);
+                console.log(e);
+              }
+
+              let linkedRoomIds: number[] = [];
+              for (const mumbleChannel of linkedRooms) {
+                linkedRoomIds.push(Number(mumbleChannel.getId()))
+              }
+              murmur.sendMessage(event, linkedRoomIds, displayname);
             }
 
-            murmur.sendMessage(event, displayname);
             return;
           },
         },
