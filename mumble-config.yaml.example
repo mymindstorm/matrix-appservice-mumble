@@ -6,5 +6,6 @@ domain: 'example.com'
 homeserverURL: 'https://matrix.example.com/'
 # Internal ID of the Matrix room to use for bridge admin commands.
 # Anyone in this room will be able to link Mumble rooms to Matrix.
+# Type "help" for commands, you should only use this room for bot admin.
 # On Riot this is under 'Room Settings' => 'Advanced' => 'Room information'.
 matrixRoom: '!randomID:example.com'

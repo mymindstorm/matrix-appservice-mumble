@@ -140,7 +140,6 @@ async function main() {
                   });
                   break;
                 default:
-                  intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
                   break;
               }
             } else {
