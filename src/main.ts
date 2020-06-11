@@ -74,6 +74,14 @@ async function main() {
                     break;
                   }
 
+                  // try to join the room
+                  try {
+                    await intent.join(mtxRoomId);
+                  } catch (err) {
+                    intent.sendText(config.matrixRoom, "Could not join Matrix room.");
+                    break;
+                  }
+
                   let mumbleChanId: number | undefined;
                   if (mumbleChanName === "root_channel") {
                     mumbleChanId = 0;
@@ -83,14 +91,6 @@ async function main() {
                       intent.sendText(config.matrixRoom, "Could not find Mumble channel.");
                       break;
                     }
-                  }
-
-                  // try to join the room
-                  try {
-                    await intent.join(mtxRoomId);
-                  } catch (err) {
-                    intent.sendText(config.matrixRoom, "Could not join Matrix room.");
-                    break;
                   }
                   
                   await roomLinks.linkRooms(new MatrixRoom(mtxRoomId), new RemoteRoom(String(mumbleChanId)), { send_join_part: sendJoinPart });
