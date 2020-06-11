@@ -1,5 +1,5 @@
 import Murmur from'./Murmur';
-import {Cli, Bridge, AppServiceRegistration, Request, BridgeContext, RoomBridgeStore} from 'matrix-appservice-bridge';
+import {Cli, Bridge, AppServiceRegistration, Request, BridgeContext, RoomBridgeStore, MatrixRoom, RemoteRoom} from 'matrix-appservice-bridge';
 import nedb from 'nedb';
 
 async function main() {
@@ -70,13 +70,16 @@ async function main() {
                     break;
                   }
 
-                  // yet another bad type
-                  const mtxRoom = await intent.roomState(mtxRoomId, false);
-                  console.log(mtxRoom);
-                  if (!mtxRoom) {
-                    intent.sendText(config.matrixRoom, "Could not find Matrix room.");
+                  // try to join the room
+                  try {
+                     await intent.join(mtxRoomId);
+                  } catch (err) {
+                    intent.sendText(config.matrixRoom, "Could not join Matrix room.");
                     break;
                   }
+                  
+                  await roomLinks.linkRooms(new MatrixRoom(mtxRoomId), new RemoteRoom(String(mumbleChanId)));
+                  intent.sendText(config.matrixRoom, "Link successful!");
                   break;
                 case "unlink":
                   break;
@@ -122,6 +125,7 @@ async function main() {
       await murmur.setupCallbacks(bridge, roomLinks, config);
       bridge.run(port, config);
       murmur.setMatrixClient(bridge.getClientFactory().getClientAs());
+      bridge.getIntent().sendText(config.matrixRoom, "Bridge running");
       return;
     },
   }).run();
