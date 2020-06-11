@@ -57,5 +57,5 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are us
 - Can you curl `url` in `mumble-config.yaml` from the homeserver?
     - Check firewall configuration
     - Check if matrix-appservice-mumble is running
-    - Check logs
-    - Check `mumble-registration.yaml` on both sides (should be in working directory of matrix-appservice-mumble and on homeserver)
+- Check logs
+- Check `mumble-registration.yaml` on both sides (should be in working directory of matrix-appservice-mumble and on homeserver)
