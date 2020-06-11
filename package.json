@@ -18,10 +18,12 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.0.5",
     "google-protobuf": "^3.12.2",
-    "matrix-appservice-bridge": "^1.12.2"
+    "matrix-appservice-bridge": "^1.12.2",
+    "nedb": "^1.8.0"
   },
   "devDependencies": {
     "@types/google-protobuf": "^3.7.2",
+    "@types/nedb": "^1.8.9",
     "@types/matrix-appservice-bridge": "^1.11.3",
     "@types/node": "^12.12.44",
     "grpc-tools": "^1.9.0",
