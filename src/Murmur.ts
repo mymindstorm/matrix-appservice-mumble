@@ -67,53 +67,61 @@ export default class Murmur {
 
   async setupCallbacks(bridge: Bridge, roomLinks: RoomBridgeStore, config: MurmurConfig) {
     const stream = await this.getServerStream();
-    const getMatrixRooms = async (channelId?: number): Promise<MatrixRoom[]> => {
+    const getMatrixRooms = async (channelId?: number | Channel[]): Promise<MatrixRoom[]> => {
       if (!channelId) {
         return [];
       }
-      return await roomLinks.getLinkedMatrixRooms(String(channelId));
+
+      if (typeof channelId === "object") {
+        let mtxRooms: MatrixRoom[] = [];
+        for (const channel of channelId) {
+          mtxRooms = mtxRooms.concat(await roomLinks.getLinkedMatrixRooms(String(channel.getId())));
+        }
+        return mtxRooms;
+      } else {
+        return await roomLinks.getLinkedMatrixRooms(String(channelId));
+      }
     }
     stream.on('data', async (event: Server.Event) => {
-      let matrixRooms: MatrixRoom[] = [];
       switch (event.getType()) {
         case Server.Event.Type.USERCONNECTED:
-          matrixRooms = await getMatrixRooms(event.getChannel()?.getId());
-          if (!matrixRooms.length) {
+          const connMtxRooms = await roomLinks.getEntriesByLinkData({ send_join_part: true });
+          if (!connMtxRooms.length) {
             break;
           }
 
           const connIntent = bridge.getIntent();
-          for (const room of matrixRooms) {
-            connIntent.sendMessage(room.getId(), {
+          for (const room of connMtxRooms) {
+            connIntent.sendMessage(room.matrix_id, {
               body: `${event.getUser()?.getName()} has connected to the server.`,
               msgtype: "m.notice"
             });
           }
           break;
         case Server.Event.Type.USERDISCONNECTED:
-          matrixRooms = await getMatrixRooms(event.getChannel()?.getId());
-          if (!matrixRooms.length) {
+          const disconnMtxRooms = await roomLinks.getEntriesByLinkData({ send_join_part: true });
+          if (!disconnMtxRooms.length) {
             break;
           }
 
           const disconnIntent = bridge.getIntent();
-          for (const room of matrixRooms) {
-            disconnIntent.sendMessage(room.getId(), {
+          for (const room of disconnMtxRooms) {
+            disconnIntent.sendMessage(room.matrix_id, {
               body: `${event.getUser()?.getName()} has disconnected from the server.`,
               msgtype: "m.notice"
             });
           }
           break;
         case Server.Event.Type.USERTEXTMESSAGE:
-          matrixRooms = await getMatrixRooms(event.getChannel()?.getId());
-          if (!matrixRooms.length) {
+          const textMtxRooms = await getMatrixRooms(event.getMessage()?.getChannelsList());
+          if (!textMtxRooms.length) {
             break;
           }
 
           const textIntent = bridge.getIntent(`@mumble_${event.getUser()?.getName()}:${config.domain}`);
-          for (const room of matrixRooms) {
+          for (const room of textMtxRooms) {
             textIntent.sendMessage(room.getId(), {
-              body: event.getMessage()?.getText,
+              body: event.getMessage()?.getText(),
               format: "org.matrix.custom.html",
               formatted_body: event.getMessage()?.getText(),
               msgtype: "m.text"

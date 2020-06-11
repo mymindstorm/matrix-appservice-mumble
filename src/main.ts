@@ -5,7 +5,8 @@ import nedb from 'nedb';
 async function main() {
   // Persistent DB with Matrix room <-> Mumble channel links
   const roomLinkDb = new nedb({
-    filename: "./room-links.db"
+    filename: "./room-links.db",
+    autoload: true
    });
   const roomLinks = new RoomBridgeStore(roomLinkDb);
 
@@ -57,7 +58,14 @@ async function main() {
               switch (splitCommand[0]) {
                 case "link":
                   const mtxRoomId = splitCommand[1];
-                  const mumbleChanName = splitCommand.slice(2).join(' ');
+                  let mumbleChanName = splitCommand.slice(2).join(' ');
+
+                  let sendJoinPart = false;
+
+                  if (mumbleChanName.substring(mumbleChanName.length - 4) === "true") {
+                    sendJoinPart = true;
+                    mumbleChanName = mumbleChanName.substring(mumbleChanName.length - 4);
+                  }
 
                   if (!mtxRoomId && !mumbleChanName) {
                     intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
@@ -72,13 +80,13 @@ async function main() {
 
                   // try to join the room
                   try {
-                     await intent.join(mtxRoomId);
+                    await intent.join(mtxRoomId);
                   } catch (err) {
                     intent.sendText(config.matrixRoom, "Could not join Matrix room.");
                     break;
                   }
                   
-                  await roomLinks.linkRooms(new MatrixRoom(mtxRoomId), new RemoteRoom(String(mumbleChanId)));
+                  await roomLinks.linkRooms(new MatrixRoom(mtxRoomId), new RemoteRoom(String(mumbleChanId)), { send_join_part: sendJoinPart });
                   intent.sendText(config.matrixRoom, "Link successful!");
                   break;
                 case "unlink":
