@@ -92,7 +92,11 @@ export default class Murmur {
 
           const connIntent = bridge.getIntent();
           for (const room of connMtxRooms) {
-            connIntent.sendMessage(room.matrix_id, {
+            const mtxId = room.matrix?.getId();
+            if (!mtxId) {
+              continue;
+            }
+            connIntent.sendMessage(mtxId, {
               body: `${event.getUser()?.getName()} has connected to the server.`,
               msgtype: "m.notice"
             });
@@ -106,7 +110,11 @@ export default class Murmur {
 
           const disconnIntent = bridge.getIntent();
           for (const room of disconnMtxRooms) {
-            disconnIntent.sendMessage(room.matrix_id, {
+            const mtxId = room.matrix?.getId();
+            if (!mtxId) {
+              continue;
+            }
+            disconnIntent.sendMessage(mtxId, {
               body: `${event.getUser()?.getName()} has disconnected from the server.`,
               msgtype: "m.notice"
             });

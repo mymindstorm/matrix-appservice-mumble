@@ -64,18 +64,24 @@ async function main() {
 
                   if (mumbleChanName.substring(mumbleChanName.length - 4) === "true") {
                     sendJoinPart = true;
-                    mumbleChanName = mumbleChanName.substring(mumbleChanName.length - 4);
+                    mumbleChanName = mumbleChanName.substring(0, mumbleChanName.length - 4);
                   }
+                  mumbleChanName = mumbleChanName.trim();
 
                   if (!mtxRoomId && !mumbleChanName) {
                     intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
                     break;
                   }
 
-                  const mumbleChanId = await murmur.getChannelId(mumbleChanName);
-                  if (!mumbleChanId) {
-                    intent.sendText(config.matrixRoom, "Could not find Mumble channel.");
-                    break;
+                  let mumbleChanId: number | undefined;
+                  if (mumbleChanName === "root_channel") {
+                    mumbleChanId = 0;
+                  } else {
+                    mumbleChanId = await murmur.getChannelId(mumbleChanName);
+                    if (!mumbleChanId) {
+                      intent.sendText(config.matrixRoom, "Could not find Mumble channel.");
+                      break;
+                    }
                   }
 
                   // try to join the room
@@ -96,6 +102,8 @@ async function main() {
                   break;
                 default:
                   intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
+                  // link [matrix internal room id] [mumble chan name | "root_channel] [true - send join part messages]
+                  // no whitespace in mumble chan names
                   break;
               }
             } else {
