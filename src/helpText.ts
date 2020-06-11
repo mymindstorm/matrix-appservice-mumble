@@ -12,7 +12,7 @@ More info: https://github.com/mymindstorm/matrix-appservice-mumble/blob/master/R
   <ul> \
   <li>link &lt;Matrix room ID&gt; &lt;Mumble channel name | <code>root_channel</code>&gt; [<code>true</code>] \
     <ul> \
-      <li>Use <code>root_channel<code> instead of a channel name to link the topmost channel in Mumble</li> \
+      <li>Use <code>root_channel</code> instead of a channel name to link the topmost channel in Mumble</li> \
       <li>Set <code>true</code> to send join/leave part messages to the linked Matrix room</li> \
     </ul> \
   </li> \
