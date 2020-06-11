@@ -167,11 +167,8 @@ export default class Murmur {
     }
 
     if (event.content.msgtype === "m.text"
-      // @ts-ignore
       && event.content.format === "org.matrix.custom.html"
-      // @ts-ignore
       && event.content.formatted_body) {
-      // @ts-ignore
       messageContent = event.content.formatted_body;
     }
 
