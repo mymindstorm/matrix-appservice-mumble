@@ -1,6 +1,7 @@
 import Murmur from'./Murmur';
 import {Cli, Bridge, AppServiceRegistration, Request, BridgeContext, RoomBridgeStore, MatrixRoom, RemoteRoom} from 'matrix-appservice-bridge';
 import nedb from 'nedb';
+import helpText from './helpText';
 
 async function main() {
   // Persistent DB with Matrix room <-> Mumble channel links
@@ -53,13 +54,13 @@ async function main() {
 
             const intent = bridge.getIntent();
             if (event.room_id === config.matrixRoom && event.content.msgtype === "m.text") {
-              // Process admin room command
+              // Process admin room commands
+              // TODO: consider using a library to parse input
               const splitCommand = event.content.body?.split(' ') || ["invalid command"];
               switch (splitCommand[0]) {
                 case "link":
                   const mtxRoomId = splitCommand[1];
                   let mumbleChanName = splitCommand.slice(2).join(' ');
-
                   let sendJoinPart = false;
 
                   if (mumbleChanName.substring(mumbleChanName.length - 4) === "true") {
@@ -96,14 +97,50 @@ async function main() {
                   intent.sendText(config.matrixRoom, "Link successful!");
                   break;
                 case "unlink":
+                  const delinkType = splitCommand[1];
+
+                  if (delinkType === "matrix") {
+                    const mtxRoomId = splitCommand[2];
+                    if (!mtxRoomId) {
+                      intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
+                      break;
+                    }
+
+                    await roomLinks.removeEntriesByMatrixRoomId(mtxRoomId);
+                    intent.sendText(config.matrixRoom, "Unlink successful!");
+                  } else if (delinkType === "mumble") {
+                    const mumbleChanName = splitCommand.slice(2).join(' ').trim();
+                    if (!mumbleChanName) {
+                      intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
+                      break;
+                    }
+
+                    let mumbleChanId: number | undefined;
+                    if (mumbleChanName === "root_channel") {
+                      mumbleChanId = 0;
+                    } else {
+                      mumbleChanId = await murmur.getChannelId(mumbleChanName);
+                      if (!mumbleChanId) {
+                        intent.sendText(config.matrixRoom, "Could not find Mumble channel.");
+                        break;
+                      }
+                    }
+
+                    await roomLinks.removeEntriesByRemoteRoomId(String(mumbleChanId));
+                    intent.sendText(config.matrixRoom, "Unlink successful!");
+                  } else {
+                    intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
+                  }
                   break;
                 case "help":
-                  intent.sendText(config.matrixRoom, "TODO");
+                  intent.sendMessage(config.matrixRoom, {
+                    ...helpText,
+                    format: "org.matrix.custom.html",
+                    msgtype: "m.text"
+                  });
                   break;
                 default:
                   intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
-                  // link [matrix internal room id] [mumble chan name | "root_channel] [true - send join part messages]
-                  // no whitespace in mumble chan names
                   break;
               }
             } else {
