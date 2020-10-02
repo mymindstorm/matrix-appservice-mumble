@@ -4,13 +4,13 @@
 
 Murmur would always segfualt if I used the packaged versions of the gRPC libraries. Make sure you uninstall any packaged versions of gRPC and protobuf before starting.
 
-1. [Compile gRPC](https://github.com/grpc/grpc/blob/master/BUILDING.md). 
+1. [Compile gRPC](https://github.com/grpc/grpc/blob/master/BUILDING.md).
 
 Make sure to `git checkout` to a relase tag before building.
 
 2. After running `make` and `sudo make install` on the main directory, `cd third_party/protobuf` and do another `sudo make install`.
 
-You might need to add a refrence to the compiled libs in `/etc/ld.so.conf.d` if you didn't set your prefix. Check the output of `make install` for more info. 
+You might need to add a refrence to the compiled libs in `/etc/ld.so.conf.d` if you didn't set your prefix. Check the output of `make install` for more info.
 
 pkg-config might not find the grpc `*.pc` files it needs when you compile. You may need to find these files yourself and then run `export PKG_CONFIG_PATH=[dir]`. For me this directory was `/usr/local/lib/pkgconfig`.
 
