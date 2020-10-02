@@ -3,6 +3,7 @@ import * as MurmurService from '../lib/MurmurRPC_grpc_pb';
 import { Server, TextMessage, Channel, User } from '../lib/MurmurRPC_pb';
 import { Bridge, RoomBridgeStore, Event, MatrixRoom } from 'matrix-appservice-bridge';
 import { MatrixClient } from 'matrix-js-sdk';
+import { MurmurConfig, JoinPartType } from "./types";
 
 export default class Murmur {
   private addr: string;
@@ -85,7 +86,7 @@ export default class Murmur {
     stream.on('data', async (event: Server.Event) => {
       switch (event.getType()) {
         case Server.Event.Type.USERCONNECTED:
-          const connMtxRooms = await roomLinks.getEntriesByLinkData({ send_join_part: true });
+          const connMtxRooms = await roomLinks.getEntriesByLinkData({ send_join_part: JoinPartType.message });
           if (!connMtxRooms.length) {
             break;
           }
@@ -103,7 +104,7 @@ export default class Murmur {
           }
           break;
         case Server.Event.Type.USERDISCONNECTED:
-          const disconnMtxRooms = await roomLinks.getEntriesByLinkData({ send_join_part: true });
+          const disconnMtxRooms = await roomLinks.getEntriesByLinkData({ send_join_part: JoinPartType.message });
           if (!disconnMtxRooms.length) {
             break;
           }

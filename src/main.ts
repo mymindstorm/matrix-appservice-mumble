@@ -1,7 +1,8 @@
 import Murmur from'./Murmur';
 import {Cli, Bridge, AppServiceRegistration, Request, BridgeContext, RoomBridgeStore, MatrixRoom, RemoteRoom} from 'matrix-appservice-bridge';
 import nedb from 'nedb';
-import helpText from './helpText';
+import yargs from 'yargs';
+import { MurmurConfig, JoinPartType } from './types';
 
 async function main() {
   // Persistent DB with Matrix room <-> Mumble channel links
@@ -51,93 +52,130 @@ async function main() {
             const intent = bridge.getIntent();
             if (event.room_id === config.matrixRoom && event.content.msgtype === "m.text") {
               // Process admin room commands
-              // TODO: consider using a library to parse input
-              const splitCommand = event.content.body?.split(' ') || ["invalid command"];
-              switch (splitCommand[0]) {
-                case "link":
-                  const mtxRoomId = splitCommand[1];
-                  let mumbleChanName = splitCommand.slice(2).join(' ');
-                  let sendJoinPart = false;
-
-                  if (mumbleChanName.substring(mumbleChanName.length - 4) === "true") {
-                    sendJoinPart = true;
-                    mumbleChanName = mumbleChanName.substring(0, mumbleChanName.length - 4);
+              if (!event.content.body) {
+                return;
+              }
+              yargs.command('link', 'Link a room to a channel', (yargs) => {
+                  yargs.option('matrix-room', {
+                    description: "Matrix room ID",
+                    type: "string",
+                    group: "Matrix",
+                    required: true
+                  }).option('joinpart-type', {
+                    description: "Configre Matrix user join / leave notifications.",
+                    group: "Matrix",
+                    choices: ["message"]
+                  }).option('mumble-channel', {
+                    description: "Link a Mumble channel by ID",
+                    type: "string",
+                    conflicts: ["root-channel", "all-channels"],
+                    group: "Mumble"
+                  }).option("root-channel", {
+                    description: "Link root Mumble channel",
+                    type: "boolean",
+                    conflicts: ["mumble-channel", "all-channels"],
+                    group: "Mumble"
+                  }).options("all-channels", {
+                    description: "Link all Mumble channels",
+                    type: "boolean",
+                    conflicts: ["mumble-channel", "root-channel"],
+                    group: "Mumble"
+                  })
+                }, async (args) => {
+                  // Parse arguments
+                  let joinpartType: JoinPartType = JoinPartType.none;
+                  if (typeof args["joinpart-type"] === "string") {
+                    switch (args["joinpart-type"]) {
+                      case "message":
+                        joinpartType = JoinPartType.message;
+                        break;
+                    
+                      default:
+                        break;
+                    }
                   }
-                  mumbleChanName = mumbleChanName.trim();
 
-                  if (!mtxRoomId && !mumbleChanName) {
-                    intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
-                    break;
+                  let mtxRoomId: string;
+                  if (typeof args['matrix-room'] === "string") {
+                    mtxRoomId = args['matrix-room'];
+                  } else {
+                    intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid options.");
+                    return;
                   }
 
-                  // try to join the room
+                  let mumbleChanId: number;
+                  if (typeof args["mumble-channel"] === "string") {
+                    // Try to get mumble channel ID
+                    const mumbleChanIdResult = await murmur.getChannelId(args["mumble-channel"].trim());
+                    if (!mumbleChanIdResult) {
+                      intent.sendText(config.matrixRoom, "Could not find Mumble channel.");
+                      return;
+                    }
+                    mumbleChanId = mumbleChanIdResult;
+                  } else if (args["root-channel"]) {
+                    mumbleChanId = 0;
+                  } else if (args["all-channels"]) {
+                    mumbleChanId = -1;
+                  } else {
+                    intent.sendText(config.matrixRoom, "Please specify a Mumble channel. Type 'help' for valid options.");
+                    return;
+                  }
+
+                  // Try to join the Matrix room
                   try {
                     await intent.join(mtxRoomId);
                   } catch (err) {
                     intent.sendText(config.matrixRoom, "Could not join Matrix room.");
-                    break;
-                  }
-
-                  let mumbleChanId: number | undefined;
-                  if (mumbleChanName === "root_channel") {
-                    mumbleChanId = 0;
-                  } else {
-                    mumbleChanId = await murmur.getChannelId(mumbleChanName);
-                    if (!mumbleChanId) {
-                      intent.sendText(config.matrixRoom, "Could not find Mumble channel.");
-                      break;
-                    }
-                  }
+                    return;
+                  }                  
                   
-                  await roomLinks.linkRooms(new MatrixRoom(mtxRoomId), new RemoteRoom(String(mumbleChanId)), { send_join_part: sendJoinPart });
+                  await roomLinks.linkRooms(new MatrixRoom(mtxRoomId), new RemoteRoom(String(mumbleChanId)), { send_join_part: joinpartType });
                   intent.sendText(config.matrixRoom, "Link successful!");
-                  break;
-                case "unlink":
-                  const delinkType = splitCommand[1];
-
-                  if (delinkType === "matrix") {
-                    const mtxRoomId = splitCommand[2];
-                    if (!mtxRoomId) {
-                      intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
-                      break;
-                    }
-
-                    await roomLinks.removeEntriesByMatrixRoomId(mtxRoomId);
-                    intent.sendText(config.matrixRoom, "Unlink successful!");
-                  } else if (delinkType === "mumble") {
-                    const mumbleChanName = splitCommand.slice(2).join(' ').trim();
-                    if (!mumbleChanName) {
-                      intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
-                      break;
-                    }
-
-                    let mumbleChanId: number | undefined;
-                    if (mumbleChanName === "root_channel") {
-                      mumbleChanId = 0;
-                    } else {
-                      mumbleChanId = await murmur.getChannelId(mumbleChanName);
-                      if (!mumbleChanId) {
-                        intent.sendText(config.matrixRoom, "Could not find Mumble channel.");
-                        break;
+                }).command('unlink <type> [id]', 'Unlink a channel or room. Only one option will be accepted.', (yargs) => {
+                  yargs.choices("type", ["matrix", "mumble", "mumble-root", "mumble-all-chans"]
+                    ).positional("id", {
+                      type: "string" 
+                    });
+                }, async (args) => {
+                  switch (args.type) {
+                    case "matrix":
+                      if (typeof args.id !== "string") {
+                        intent.sendText(config.matrixRoom, "Could not unlink: no room ID provided.");
+                        return;
                       }
-                    }
+                      await roomLinks.removeEntriesByMatrixRoomId(args.id);
+                      intent.sendText(config.matrixRoom, "Unlink successful!");
+                      break;
+                      
+                    case "mumble":
+                      if (typeof args.id !== "string") {
+                        intent.sendText(config.matrixRoom, "Could not unlink: no channel ID provided.");
+                        return;
+                      }
+                      await roomLinks.removeEntriesByRemoteRoomId(String(args.id));
+                      intent.sendText(config.matrixRoom, "Unlink successful!");
+                      break;
 
-                    await roomLinks.removeEntriesByRemoteRoomId(String(mumbleChanId));
-                    intent.sendText(config.matrixRoom, "Unlink successful!");
-                  } else {
-                    intent.sendText(config.matrixRoom, "Invalid command. Type 'help' for valid commands.");
+                    case "mumble-root":
+                      await roomLinks.removeEntriesByRemoteRoomId(String(0));
+                      intent.sendText(config.matrixRoom, "Unlink successful!");
+                      break;
+
+                    case "mumble-all-chans":
+                      await roomLinks.removeEntriesByRemoteRoomId(String(-1));
+                      intent.sendText(config.matrixRoom, "Unlink successful!");
+                      break;
+
+                    default:
+                      break;
                   }
-                  break;
-                case "help":
-                  intent.sendMessage(config.matrixRoom, {
-                    ...helpText,
-                    format: "org.matrix.custom.html",
-                    msgtype: "m.text"
-                  });
-                  break;
-                default:
-                  break;
-              }
+                }
+              ).scriptName("")
+              .wrap(null)
+              .parse(event.content.body, {}, (err, argv, output) => {
+                if (err) console.error(err);
+                if (output) intent.sendText(config.matrixRoom, output);
+              });
             } else {
               const linkedRooms = await roomLinks.getLinkedRemoteRooms(event.room_id);
 
@@ -173,7 +211,7 @@ async function main() {
       await murmur.setupCallbacks(bridge, roomLinks, config);
       bridge.run(port, config);
       murmur.setMatrixClient(bridge.getClientFactory().getClientAs());
-      bridge.getIntent().sendText(config.matrixRoom, "Bridge running");
+      bridge.getIntent().sendText(config.matrixRoom, "Bridge running. It may take a few minutes before commands are processed.");
       return;
     },
   }).run();
