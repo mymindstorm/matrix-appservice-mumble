@@ -10,8 +10,9 @@ import {
   RoomBridgeStore,
   MatrixRoom,
   WeakEvent,
+  RemoteRoom,
 } from "matrix-appservice-bridge";
-import { MurmurConfig, JoinPartType } from "./types";
+import { MurmurConfig } from "./types";
 import { MatrixClient } from "matrix-js-sdk";
 
 export default class Murmur {
@@ -108,7 +109,7 @@ export default class Murmur {
         switch (event.getType()) {
           case Server.Event.Type.USERCONNECTED: {
             const connMtxRooms = await roomLinks.getEntriesByLinkData({
-              send_join_part: JoinPartType.message,
+              send_join_part: true,
             });
             if (!connMtxRooms.length) {
               break;
@@ -131,7 +132,7 @@ export default class Murmur {
           }
           case Server.Event.Type.USERDISCONNECTED: {
             const disconnMtxRooms = await roomLinks.getEntriesByLinkData({
-              send_join_part: JoinPartType.message,
+              send_join_part: true,
             });
             if (!disconnMtxRooms.length) {
               break;
@@ -146,16 +147,24 @@ export default class Murmur {
               const userName =
                 event.getUser()?.getName() || "[Bridge error: Unknown user]";
               void disconnIntent.sendMessage(mtxId, {
-                body: `${userName} "[Bridge error: No name]"} has disconnected from the server.`,
+                body: `${userName} has disconnected from the server.`,
                 msgtype: "m.notice",
               });
             }
             break;
           }
           case Server.Event.Type.USERTEXTMESSAGE: {
+            // Get linked mtx rooms
             const textMtxRooms = await getMatrixRooms(
               event.getMessage()?.getChannelsList()
             );
+
+            // If a room is linked to all channels, send messages there.
+            const sendAllRooms = await roomLinks.getEntriesByRemoteId("-1");
+            sendAllRooms.forEach((room) =>
+              room.matrix ? textMtxRooms.push(room.matrix) : undefined
+            );
+
             if (!textMtxRooms.length) {
               break;
             }
@@ -195,7 +204,7 @@ export default class Murmur {
   // Matrix message -> Mumble
   sendMessage(
     event: WeakEvent,
-    linkedRooms: number[],
+    linkedChannels: RemoteRoom[],
     displayname?: string
   ): void {
     if (!this.client || !this.server || !this.matrixClient || !event.content) {
@@ -238,8 +247,18 @@ export default class Murmur {
 
     const message = new TextMessage();
     message.setServer(this.server);
-    for (const roomId of linkedRooms) {
-      message.addChannels(new Channel().setId(roomId));
+    for (const channel of linkedChannels) {
+      const channelId = Number(channel.getId());
+      const channelWithId = new Channel().setId(channelId);
+
+      // -1 === send to all channels. If nothing is added to message, it will send to all channels.
+      if (channelId === -1) {
+        // do nothing
+      } else if (channel.get("recurse")) {
+        message.addTrees(channelWithId);
+      } else {
+        message.addChannels(channelWithId);
+      }
     }
     message.setText(`${displayname}: ${messageContent}`);
 

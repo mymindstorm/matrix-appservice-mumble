@@ -58,6 +58,7 @@ function main() {
             }
 
             const intent = bridge.getIntent();
+            // was message sent to admin room?
             if (
               event.room_id === config.matrixRoom &&
               event.content.msgtype === "m.text"
@@ -67,6 +68,7 @@ function main() {
                 return;
               }
 
+              // link command logic
               const linkCmdCallback = async function (args: {
                 [argName: string]: unknown;
               }) {
@@ -95,6 +97,7 @@ function main() {
                 }
 
                 let mumbleChanId: number;
+                let mumbleRecurse = false;
                 if (typeof args["mumble-channel"] === "string") {
                   // Try to get mumble channel ID
                   const mumbleChanIdResult = await murmur.getChannelId(
@@ -120,6 +123,10 @@ function main() {
                   return;
                 }
 
+                if (args["recurse"]) {
+                  mumbleRecurse = true;
+                }
+
                 // Try to join the Matrix room
                 try {
                   await intent.join(mtxRoomId);
@@ -133,12 +140,18 @@ function main() {
 
                 await roomLinks.linkRooms(
                   new MatrixRoom(mtxRoomId),
-                  new RemoteRoom(String(mumbleChanId)),
-                  { send_join_part: joinpartType }
+                  new RemoteRoom(String(mumbleChanId), {
+                    recurse: mumbleRecurse,
+                  }),
+                  {
+                    send_join_part: Boolean(joinpartType),
+                    join_part_type: joinpartType,
+                  }
                 );
                 void intent.sendText(config.matrixRoom, "Link successful!");
               };
 
+              // unlink command logic
               const unlinkCmdCallback = async function (args: {
                 [argName: string]: unknown;
               }) {
@@ -200,7 +213,9 @@ function main() {
                 }
               };
 
-              yargs
+              // describe admin room commands
+              // yargs keeps a global state unless it is called like this
+              ((yargs() as unknown) as typeof yargs)
                 .command(
                   "link",
                   "Link a room to a channel",
@@ -235,21 +250,42 @@ function main() {
                         type: "boolean",
                         conflicts: ["mumble-channel", "root-channel"],
                         group: "Mumble",
+                      })
+                      .options("recurse", {
+                        description:
+                          "Send bridged messages to all subchannels.",
+                        type: "boolean",
+                        conflicts: ["all-channels"],
+                        group: "Mumble",
+                      })
+                      .check((argv) => {
+                        if (
+                          !(
+                            argv["mumble-channel"] ||
+                            argv["root-channel"] ||
+                            argv["all-channels"]
+                          )
+                        ) {
+                          throw new Error("Please specify a Mumble channel!");
+                        }
+                        return true;
                       });
                   },
                   (args) => void linkCmdCallback(args)
                 )
                 .command(
                   "unlink <type> [id]",
-                  "Unlink a channel or room. Only one option will be accepted.",
+                  "Unlink a channel or room.",
                   (yargs) => {
                     yargs
-                      .choices("type", [
-                        "matrix",
-                        "mumble",
-                        "mumble-root",
-                        "mumble-all-chans",
-                      ])
+                      .positional("type", {
+                        choices: [
+                          "matrix",
+                          "mumble",
+                          "mumble-root",
+                          "mumble-all-chans",
+                        ],
+                      })
                       .positional("id", {
                         type: "string",
                       });
@@ -267,6 +303,7 @@ function main() {
                   }
                 );
             } else {
+              // message was not sent to admin room, check if the message should be bridged
               const linkedRooms = await roomLinks.getLinkedRemoteRooms(
                 event.room_id
               );
@@ -276,7 +313,6 @@ function main() {
                 return;
               }
 
-              // Send message to linked rooms
               // Get user display name
               let displayname;
               try {
@@ -294,11 +330,8 @@ function main() {
                 console.log(e);
               }
 
-              const linkedRoomIds: number[] = [];
-              for (const mumbleChannel of linkedRooms) {
-                linkedRoomIds.push(Number(mumbleChannel.getId()));
-              }
-              murmur.sendMessage(event, linkedRoomIds, displayname);
+              // send message to linked channels
+              murmur.sendMessage(event, linkedRooms, displayname);
             }
 
             return;
@@ -307,7 +340,7 @@ function main() {
       });
       console.log("Matrix-side listening on port %s", port);
       await murmur.setupCallbacks(bridge, roomLinks, config);
-      void bridge.run(port, config);
+      await bridge.run(port, config);
       murmur.setMatrixClient(bridge.getClientFactory().getClientAs());
       void bridge
         .getIntent()
