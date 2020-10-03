@@ -85,23 +85,52 @@ export default class Murmur {
     const stream = await this.getServerStream();
 
     const getMatrixRooms = async (
-      channelId?: number | Channel[]
+      channelId?: Channel[]
     ): Promise<MatrixRoom[]> => {
       if (!channelId) {
         return [];
       }
 
-      if (typeof channelId === "object") {
-        let mtxRooms: MatrixRoom[] = [];
-        for (const channel of channelId) {
-          mtxRooms = mtxRooms.concat(
-            await roomLinks.getLinkedMatrixRooms(String(channel.getId()))
-          );
+      const recursiveMumbleChans = await roomLinks.getEntriesByRemoteRoomData({
+        recurse: true,
+      });
+      const recursiveMumbleChanIds: number[] = [];
+      for (let i = 0; i < recursiveMumbleChans.length; i++) {
+        const id = recursiveMumbleChans[i].remote?.getId();
+        if (id) {
+          recursiveMumbleChanIds.push(Number(id));
+        } else {
+          recursiveMumbleChans.splice(i, 1);
         }
-        return mtxRooms;
-      } else {
-        return await roomLinks.getLinkedMatrixRooms(String(channelId));
       }
+
+      let mtxRooms: MatrixRoom[] = [];
+      for (const channel of channelId) {
+        mtxRooms = mtxRooms.concat(
+          await roomLinks.getLinkedMatrixRooms(String(channel.getId()))
+        );
+
+        // If there are recursive channels, then figure out if this channel
+        //  is a child of a linked recursive channel.
+        // TODO: possibly make an in-memory cache to store known hits?
+        if (recursiveMumbleChans.length) {
+          const channelInfo = await this.queryChannel(channel);
+          let parentChannel = channelInfo?.getParent();
+          console.log(parentChannel);
+          while (typeof parentChannel !== "undefined") {
+            const chanId = parentChannel.getId();
+            if (chanId) {
+              const searchIndex = recursiveMumbleChanIds.indexOf(chanId);
+              console.log(`${searchIndex} a: ${parentChannel.getName()}`);
+              const mtxRoom = recursiveMumbleChans[searchIndex].matrix;
+              if (mtxRoom) mtxRooms.push(mtxRoom);
+            }
+
+            parentChannel = parentChannel.getParent();
+          }
+        }
+      }
+      return mtxRooms;
     };
 
     const eventCallback = async (event: Server.Event) => {
@@ -289,6 +318,27 @@ export default class Murmur {
         }
 
         resolve();
+      });
+    });
+  }
+
+  async queryChannel(channel: Channel): Promise<Channel | undefined> {
+    return await new Promise((resolve) => {
+      const id = channel.getId();
+      if (!this.client || !id) {
+        resolve();
+        return;
+      }
+
+      this.client.channelGet(channel, (response: Channel | Error | null) => {
+        if (response instanceof Channel) {
+          resolve(response);
+          return;
+        } else if (response !== null) {
+          console.error(response);
+        }
+        resolve();
+        return;
       });
     });
   }
