@@ -4,6 +4,7 @@ A simple Matrix to Mumble bridge. It sends messages between bridged rooms and te
 
 ## Install
 
+### These instructions are for a development version, please use the instructions located [here](https://github.com/mymindstorm/matrix-appservice-mumble/tree/v0.2.0#install)
 
 ### Compiling Murmur with gRPC support
 
