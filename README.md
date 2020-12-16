@@ -1,8 +1,8 @@
 # matrix-appservice-mumble
 
-A simple Matrix to Mumble bridge. It sends messages between bridged rooms and tells you when people join / leave Murmur.
+A Matrix to Mumble bridge. It sends messages between bridged rooms and tells you when people join / leave Murmur.
 
-## Install
+## Installation
 
 
 ### Compiling Murmur with gRPC support
@@ -20,14 +20,17 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are us
 
     Manually:
 
-    [Download a release](https://github.com/mymindstorm/matrix-appservice-mumble/releases) and build
+    [Download the latest release](https://github.com/mymindstorm/matrix-appservice-mumble/releases) and build
 
     ```bash
     npm i
     ./build.sh
     ```
 2. Configure your homeserver
-    1. Generate `mumble-registration.yaml`
+    1. Use `matrix-appservice-mumble` to generate `mumble-registration.yaml`  
+    Replace "http://localhost:port" with the address your homeserver will use to talk with matrix-appservice-mumble. 
+
+    The port matrix-appservice-mumble uses can be set with -p. (Default is 8090) 
 
     ```bash
     # Replace "http://localhost:port" with the address your homeserver will use to talk
@@ -35,21 +38,26 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are us
     matrix-appservice-mumble -r -u "http://localhost:port"
     ```
 
-    2. Copy `mumble-registration.yaml` to homeserver
+    2. Copy `mumble-registration.yaml` to your homeserver install directory, e.g. `/etc/matrix-synapse/` 
 
-    3. Edit `homeserver.yaml`
+    3. Edit `homeserver.yaml` and add the path to the just generated `mumble-registration.yaml`. 
 
     ```yaml
     # A list of application service config files to use
     #
     app_service_config_files:
-    - mumble-config.yaml
+     - /etc/matrix-synapse/mumble-registration.yaml
     ```
 
-4. Fill out `mumble-config.yaml`. Look at the `mumble-config.yaml.example` file for an example.
+4. Create a new file named `mumble-config.yaml` on the server that `matrix-appservice-mumble` is installed on.
 
-5. `matrix-appservice-mumble -c ./mumble-config.yaml -f ./mumble-registration.yaml`
+5. Copy the contents of [mumble-config.yaml.example](https://github.com/mymindstorm/matrix-appservice-mumble/blob/v0.2.0/mumble-config.yaml.example) into `mumble-config.yaml` and change the options as needed.
 
+5. Start the bridge
+
+```bash
+$ matrix-appservice-mumble -c /path/to/mumble-config.yaml -f /path/to/mumble-registration.yaml`
+```
 ### Troubleshooting
 
 #### Matrix -> Murmr not working
