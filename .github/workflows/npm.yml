@@ -11,7 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Setup Node.js for use with actions
-      uses: actions/setup-node@v1.1.0
+      uses: actions/setup-node@v2.1.4
       with:
           registry-url: 'https://registry.npmjs.org'
     - name: Build
