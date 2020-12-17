@@ -4,6 +4,8 @@ A Matrix to Mumble bridge. It sends messages between bridged rooms and tells you
 
 ## Installation
 
+### These instructions are for a development version, please use the instructions located [here](https://github.com/mymindstorm/matrix-appservice-mumble/tree/0.2.0-install-instructions#matrix-appservice-mumble)
+
 ### Compiling Murmur with gRPC support
 
 Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are using Fedora or CentOS, I have a [COPR](https://copr.fedorainfracloud.org/coprs/mymindstorm/mumble-grpc/) that you can use. Otherwise, you will need to compile Murmur yourself. I have some basic notes and directions on compiling Murmur [here](COMPILING_MURMUR.md).
@@ -44,7 +46,7 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are us
     - /etc/matrix-synapse/mumble-registration.yaml
     ```
 
-4. Create a file `mumble-config.yaml`
+4. Create a new file named `mumble-config.yaml` on the server that `matrix-appservice-mumble` is installed on.
 
     - Copy the contents of [mumble-config.yaml.example](https://github.com/mymindstorm/matrix-appservice-mumble/blob/master/mumble-config.yaml.example) into `mumble-config.yaml` and change the options as needed.
 
@@ -52,14 +54,15 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are us
         
         1. Create a new room (should be invite-only, which is the default)
 
-        2. Invite `@mumblebot:<your homeserver domain>` to the room. Riot will warn you that the user does not exist, click "Invite anyway"
+        2. Invite `@mumblebot:<your homeserver domain>` to the room. Your client may warn you that the user does not exist, click "Invite anyway"
 
         3. Copy the internal room id of the newly created room to `mumble-config.yaml`
 
 5. Start the bridge
 
 ```bash
-$ matrix-appservice-mumble -c /path/to/mumble-config.yaml -f /path/to/mumble-registration.yaml`
+$ matrix-appservice-mumble -c /path/to/mumble-config.yaml -f /path/to/mumble-registration.yaml
+```
 
 6. Link a room to a channel
 
