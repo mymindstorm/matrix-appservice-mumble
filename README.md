@@ -46,7 +46,7 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are us
 
 4. Create a file `mumble-config.yaml`
 
-    - Look at the [mumble-config.yaml.example](https://github.com/mymindstorm/matrix-appservice-mumble/blob/master/mumble-config.yaml.example) file for an example
+    - Copy the contents of [mumble-config.yaml.example](https://github.com/mymindstorm/matrix-appservice-mumble/blob/master/mumble-config.yaml.example) into `mumble-config.yaml` and change the options as needed.
 
     - `matrixRoom` should be a private room
         
