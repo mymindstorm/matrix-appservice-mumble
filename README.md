@@ -56,7 +56,10 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are us
 
         3. Copy the internal room id of the newly created room to `mumble-config.yaml`
 
-5. `matrix-appservice-mumble -c /path/to/mumble-config.yaml -f /path/to/mumble-registration.yaml`
+5. Start the bridge
+
+```bash
+$ matrix-appservice-mumble -c /path/to/mumble-config.yaml -f /path/to/mumble-registration.yaml`
 
 6. Link a room to a channel
 
