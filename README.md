@@ -1,10 +1,10 @@
 # matrix-appservice-mumble
 
-A simple Matrix to Mumble bridge. It sends messages between bridged rooms and tells you when people join / leave Murmur.
+A Matrix to Mumble bridge. It sends messages between bridged rooms and tells you when people join / leave Murmur.
 
-## Install
+## Installation
 
-### These instructions are for a development version, please use the instructions located [here](https://github.com/mymindstorm/matrix-appservice-mumble/tree/v0.2.0#install)
+### These instructions are for a development version, please use the instructions located [here](https://github.com/mymindstorm/matrix-appservice-mumble/tree/0.2.0-install-instructions#matrix-appservice-mumble)
 
 ### Compiling Murmur with gRPC support
 
@@ -21,45 +21,48 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are us
 
     Manually:
 
-    [Download a release](https://github.com/mymindstorm/matrix-appservice-mumble/releases) and build
+    [Download the latest release](https://github.com/mymindstorm/matrix-appservice-mumble/releases) and build
 
     ```bash
     npm i
     ./build.sh
     ```
 2. Configure your homeserver
-    1. Generate `mumble-registration.yaml`
+    1. Use `matrix-appservice-mumble` to generate `mumble-registration.yaml`  
+    Replace "http://localhost:port" with the address your homeserver will use to talk with matrix-appservice-mumble.  
+    The port matrix-appservice-mumble uses can be set with -p. (Default is 8090)
 
     ```bash
-    # Replace "http://localhost:port" with the address your homeserver will use to talk
-    # with matrix-appservice-mumble. The port matrix-appservice-mumble uses can be set with -p.
     matrix-appservice-mumble -r -u "http://localhost:port"
     ```
 
-    2. Copy `mumble-registration.yaml` to homeserver
+    2. Copy `mumble-registration.yaml` to your homeserver install directory, e.g. `/etc/matrix-synapse/`
 
-    3. Edit `homeserver.yaml`
+    3. Edit `homeserver.yaml` and add the path to the just generated `mumble-registration.yaml`.
 
     ```yaml
     # A list of application service config files to use
-    #
     app_service_config_files:
-    - mumble-config.yaml
+    - /etc/matrix-synapse/mumble-registration.yaml
     ```
 
-4. Fill out `mumble-config.yaml`
+4. Create a new file named `mumble-config.yaml` on the server that `matrix-appservice-mumble` is installed on.
 
-    - Look at the [mumble-config.yaml.example](https://github.com/mymindstorm/matrix-appservice-mumble/blob/master/mumble-config.yaml.example) file for an example
+    - Copy the contents of [mumble-config.yaml.example](https://github.com/mymindstorm/matrix-appservice-mumble/blob/master/mumble-config.yaml.example) into `mumble-config.yaml` and change the options as needed.
 
     - `matrixRoom` should be a private room
         
-        1. Create a new invite-only room
+        1. Create a new room (should be invite-only, which is the default)
 
-        2. Invite `@mumblebot:<your homeserver domain>` to the room. Riot will warn you that the user does not exist, click "Invite anyway"
+        2. Invite `@mumblebot:<your homeserver domain>` to the room. Your client may warn you that the user does not exist, click "Invite anyway"
 
         3. Copy the internal room id of the newly created room to `mumble-config.yaml`
 
-5. `matrix-appservice-mumble -c ./mumble-config.yaml -f ./mumble-registration.yaml`
+5. Start the bridge
+
+```bash
+$ matrix-appservice-mumble -c /path/to/mumble-config.yaml -f /path/to/mumble-registration.yaml
+```
 
 6. Link a room to a channel
 
@@ -83,6 +86,7 @@ Murmur is not compiled with gRPC support by default (as of 1.3.0). If you are us
 
 - `Unhandled rejection Error: Failed to join room` on bridge startup
     - This means that the bot cannot join `matrixRoom`. Make sure that the bot has access (I.e. has the bot been invited) to the room. 
+    - Check the homeserver logs (e.g. `/var/log/matrix-synapse/homeserver.log`) for more information
 
 #### Matrix -> Murmr not working
 
