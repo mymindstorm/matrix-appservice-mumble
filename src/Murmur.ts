@@ -1,13 +1,12 @@
-import { credentials, ClientReadableStream, makeClientConstructor } from "@grpc/grpc-js";
+import {ClientReadableStream, credentials, makeClientConstructor} from "@grpc/grpc-js";
 import * as MurmurService from '../lib/MurmurRPC_grpc_pb';
-import { Server, TextMessage, Channel, User } from '../lib/MurmurRPC_pb';
-import { Bridge, RoomBridgeStore, Event, MatrixRoom } from 'matrix-appservice-bridge';
-import { MatrixClient } from 'matrix-js-sdk';
+import {Channel, Server, TextMessage} from '../lib/MurmurRPC_pb';
+import {Bridge, MatrixRoom, RoomBridgeStore, WeakEvent} from 'matrix-appservice-bridge';
 
 export default class Murmur {
   private addr: string;
   private server: Server | undefined;
-  private matrixClient: MatrixClient | undefined;
+  private matrixClient: any | undefined;
   client: MurmurService.V1Client | undefined;
 
   constructor(addr: string) {
@@ -146,13 +145,13 @@ export default class Murmur {
     return;
   }
 
-  setMatrixClient(client: MatrixClient) {
+  setMatrixClient(client: any) {
     this.matrixClient = client;
     return;
   }
 
   // Matrix message -> Mumble
-  sendMessage(event: Event, linkedRooms: number[], displayname?: string) {
+  sendMessage(event: WeakEvent, linkedRooms: number[], displayname?: string) {
     if (!this.client || !this.server || !this.matrixClient || !event.content) {
       return;
     }
@@ -197,7 +196,7 @@ export default class Murmur {
       this.client?.channelQuery(query, (err, res) => {
         if (err) {
           console.error("Murmur channel lookup error:", err);
-          resolve();
+          resolve(undefined);
           return;
         }
 
@@ -208,7 +207,7 @@ export default class Murmur {
           }
         }
 
-        resolve();
+        resolve(undefined);
       });
     });
   }
