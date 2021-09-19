@@ -26,7 +26,7 @@ async function asyncOnEvent(
   if (event.room_id === config.matrixRoom && event.content.msgtype === "m.text") {
     // Process admin room commands
     // TODO: consider using a library to parse input
-    const splitCommand = (event.content.body as string).split(' ') || ["invalid command"];
+    const splitCommand = (event.content.body as string)?.split(' ') || ["invalid command"];
     switch (splitCommand[0]) {
       case "link":
         const mtxRoomId = splitCommand[1];
@@ -199,7 +199,7 @@ async function main() {
       await murmur.setupCallbacks(bridge, roomLinks, config);
       // FIXME: returned promise is ignored
       bridge.run(port);
-      murmur.setMatrixClient(bridge.getClientFactory().getClientAs());
+      murmur.setMatrixClient(bridge.getBot().getClient());
       // FIXME: returned promise is ignored
       bridge.getIntent().sendText(config.matrixRoom, "Bridge running");
     }

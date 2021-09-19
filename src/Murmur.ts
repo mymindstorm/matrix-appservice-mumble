@@ -2,11 +2,12 @@ import {ClientReadableStream, credentials, makeClientConstructor} from "@grpc/gr
 import * as MurmurService from '../lib/MurmurRPC_grpc_pb';
 import {Channel, Server, TextMessage} from '../lib/MurmurRPC_pb';
 import {Bridge, MatrixRoom, RoomBridgeStore, WeakEvent} from 'matrix-appservice-bridge';
+import {MatrixClient} from "matrix-bot-sdk/lib/MatrixClient";
 
 export default class Murmur {
   private addr: string;
   private server: Server | undefined;
-  private matrixClient: any | undefined;
+  private matrixClient: MatrixClient | undefined;
   client: MurmurService.V1Client | undefined;
 
   constructor(addr: string) {
@@ -145,7 +146,7 @@ export default class Murmur {
     return;
   }
 
-  setMatrixClient(client: any) {
+  setMatrixClient(client: MatrixClient) {
     this.matrixClient = client;
     return;
   }
@@ -158,8 +159,7 @@ export default class Murmur {
 
     let messageContent = event.content.body;
     if (event.content.msgtype === "m.image" || event.content.msgtype === "m.file") {
-      // @ts-ignore - this is nullable
-      const url = this.matrixClient.mxcUrlToHttp(event.content.url, null, null, null, true);
+      const url = this.matrixClient.mxcToHttp(event.content.url as string);
       if (url) {
         messageContent = `<a href="${url}">${event.content.body}</a>`;
       }
